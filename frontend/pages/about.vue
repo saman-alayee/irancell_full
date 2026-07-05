@@ -34,7 +34,7 @@
               <h3 class="font-bold text-heading mb-3">شعبه (دو)</h3>
               <p class="text-sm mb-3">📍 میدان یاغچیان — روبروی بلوار بهشت — پلاک ۳ — دفتر پیشخوان دولت ستاری</p>
               <ul class="space-y-1 text-sm">
-                <li v-for="phone in branchTwoPhones" :key="phone">📞 {{ phone }}</li>
+                <li v-for="phone in branchTwoPhones" :key="phone" dir="ltr" class="text-right">📞 {{ phone }}</li>
               </ul>
             </div>
           </div>
@@ -45,12 +45,10 @@
 </template>
 
 <script setup lang="ts">
-import { formatContactPhone } from '~/composables/useApi'
-
 const branchTwoPhones = [
-  formatContactPhone('041-344 007 07'),
-  formatContactPhone('041-344 008 08'),
-  formatContactPhone('0900 914 05 02'),
-  formatContactPhone('0900 40 946 40'),
+  '041-344 007 07',
+  '041-344 008 08',
+  '0900 914 05 02',
+  '0900 40 946 40',
 ]
 </script>

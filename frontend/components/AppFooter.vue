@@ -17,7 +17,7 @@
               <p class="text-irancell-yellow font-bold mb-1">شعبه (دو)</p>
               <p>میدان یاغچیان — روبروی بلوار بهشت — پلاک ۳</p>
               <ul class="mt-2 space-y-1">
-                <li v-for="phone in phones" :key="phone">{{ phone }}</li>
+                <li v-for="phone in phones" :key="phone" dir="ltr" class="text-right">{{ phone }}</li>
               </ul>
             </div>
           </div>
@@ -39,7 +39,7 @@
             <li><NuxtLink to="/terms" class="hover:text-white transition">قوانین و مقررات</NuxtLink></li>
             <li><NuxtLink to="/login" class="hover:text-white transition">ورود</NuxtLink></li>
             <li><NuxtLink to="/register" class="hover:text-white transition">ثبت‌نام</NuxtLink></li>
-            <li v-for="mobile in mobiles" :key="mobile">{{ mobile }}</li>
+            <li v-for="mobile in mobiles" :key="mobile" dir="ltr" class="text-right">{{ mobile }}</li>
           </ul>
         </div>
       </div>
@@ -51,15 +51,13 @@
 </template>
 
 <script setup lang="ts">
-import { formatContactPhone } from '~/composables/useApi'
-
 const phones = [
-  formatContactPhone('041-344 007 07'),
-  formatContactPhone('041-344 008 08'),
+  '041-344 007 07',
+  '041-344 008 08',
 ]
 
 const mobiles = [
-  formatContactPhone('0900 914 05 02'),
-  formatContactPhone('0900 40 946 40'),
+  '0900 914 05 02',
+  '0900 40 946 40',
 ]
 </script>
