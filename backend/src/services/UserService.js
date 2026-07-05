@@ -10,7 +10,10 @@ class UserService {
       id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
+      fatherName: user.fatherName,
+      nationalId: user.nationalId,
       mobile: user.mobile,
+      secondMobile: user.secondMobile,
       email: user.email,
     };
   }
@@ -24,17 +27,26 @@ class UserService {
     return otpService.send(mobile, purpose);
   }
 
-  async register({ firstName, lastName, mobile, email, password, code }) {
+  async register({ firstName, lastName, fatherName, nationalId, mobile, secondMobile, email, password, code }) {
     await otpService.verify(mobile, code, 'register');
 
     const normalizedMobile = normalizeMobile(mobile);
+    const normalizedSecond = normalizeMobile(secondMobile);
+    const normalizedNationalId = String(nationalId).replace(/\D/g, '');
+
     const existing = await userRepository.findByMobilePublic(normalizedMobile);
     if (existing) throw new AppError('این شماره موبایل قبلاً ثبت شده است', 409);
+
+    const existingNationalId = await userRepository.findByNationalId(normalizedNationalId);
+    if (existingNationalId) throw new AppError('این کد ملی قبلاً ثبت شده است', 409);
 
     const user = await userRepository.create({
       firstName,
       lastName,
+      fatherName,
+      nationalId: normalizedNationalId,
       mobile: normalizedMobile,
+      secondMobile: normalizedSecond,
       email,
       password,
       isVerified: true,

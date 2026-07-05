@@ -27,13 +27,22 @@
             </div>
           </div>
 
-          <h2 class="text-xl font-bold text-heading mt-10">تماس با ما</h2>
-          <ul class="space-y-2 not-prose">
-            <li>📞 تلفن: ۰۲۱-۱۲۳۴۵۶۷۸</li>
-            <li>📧 ایمیل: info@example.com</li>
-            <li>🕐 ساعات کاری: شنبه تا پنج‌شنبه، ۹ تا ۱۸</li>
-            <li>📍 تهران، ایران</li>
-          </ul>
+          <h2 class="text-xl font-bold text-heading mt-10">شعب و تماس</h2>
+          <div class="space-y-4 not-prose">
+            <div v-for="branch in branches" :key="branch.title" class="card p-5">
+              <h3 class="font-bold text-heading mb-3">{{ branch.title }}</h3>
+              <ul class="space-y-2 text-sm text-body">
+                <li v-for="(line, i) in branch.lines" :key="i" class="flex gap-2">
+                  <span class="flex-shrink-0">{{ line.icon }}</span>
+                  <span>{{ line.text }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <p class="text-sm text-muted not-prose mt-6">
+            🕐 ساعات کاری: شنبه تا پنج‌شنبه، ۹ تا ۱۸
+          </p>
         </div>
       </div>
     </section>
@@ -46,5 +55,25 @@ const values = [
   { icon: '⚡', title: 'سرعت', desc: 'تحویل و فعال‌سازی در سریع‌ترین زمان ممکن' },
   { icon: '🤝', title: 'اعتماد', desc: 'شفافیت کامل در قیمت‌گذاری و فرآیند خرید' },
   { icon: '💬', title: 'پشتیبانی', desc: 'تیم پشتیبانی متخصص در تمام مراحل' },
+]
+
+const branches = [
+  {
+    title: 'شعبه (یک)',
+    lines: [
+      { icon: '📍', text: 'تبریز — میدان جهاد — جنب کوی تبریزنو' },
+      { icon: '📞', text: 'مرکز ارتباط با ایرانسل: ۳۱۰۳۸ (فول سرویس)' },
+    ],
+  },
+  {
+    title: 'شعبه (دو)',
+    lines: [
+      { icon: '📍', text: 'میدان یاغچیان — روبروی بلوار بهشت — پلاک ۳ — دفتر پیشخوان دولت ستاری' },
+      { icon: '📞', text: '۰۴۱-۳۴۴ ۰۰۷ ۰۷' },
+      { icon: '📞', text: '۰۴۱-۳۴۴ ۰۰۸ ۰۸' },
+      { icon: '📱', text: '۰۹۰۰ ۹۱۴ ۰۵ ۰۲' },
+      { icon: '📱', text: '۰۹۰۰ ۴۰ ۹۴۶ ۴۰' },
+    ],
+  },
 ]
 </script>

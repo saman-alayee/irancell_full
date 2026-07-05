@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema(
     lastName: { type: String, required: true, trim: true },
     mobile: { type: String, required: true, unique: true, trim: true },
     email: { type: String, trim: true, lowercase: true },
+    nationalId: { type: String, required: true, trim: true },
+    fatherName: { type: String, required: true, trim: true },
+    secondMobile: { type: String, required: true, trim: true },
     password: { type: String, required: true, minlength: 6, select: false },
     isVerified: { type: Boolean, default: false },
   },
@@ -14,6 +17,7 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.index({ mobile: 1 });
+userSchema.index({ nationalId: 1 }, { unique: true, sparse: true });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();

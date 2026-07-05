@@ -14,14 +14,34 @@
 
         <form class="space-y-4" @submit.prevent="otpSent ? submit() : sendOtp()">
           <div class="grid grid-cols-2 gap-4">
-            <FormField label="نام" hint="نام واقعی شما" required>
-              <input v-model="form.firstName" class="input-field" required :disabled="loading" />
+            <FormField label="نام" hint="نام واقعی شما" required :error="fieldErrors.firstName">
+              <input v-model="form.firstName" class="input-field" required :disabled="loading" @input="clearError('firstName')" />
             </FormField>
-            <FormField label="نام خانوادگی" hint="نام خانوادگی واقعی" required>
-              <input v-model="form.lastName" class="input-field" required :disabled="loading" />
+            <FormField label="نام خانوادگی" hint="نام خانوادگی واقعی" required :error="fieldErrors.lastName">
+              <input v-model="form.lastName" class="input-field" required :disabled="loading" @input="clearError('lastName')" />
             </FormField>
           </div>
-          <FormField label="شماره موبایل" hint="کد تأیید به این شماره ارسال می‌شود" required>
+
+          <FormField label="نام پدر" hint="نام پدر برای ثبت‌نام سیم‌کارت" required :error="fieldErrors.fatherName">
+            <input v-model="form.fatherName" class="input-field" required :disabled="loading" @input="clearError('fatherName')" />
+          </FormField>
+
+          <FormField label="کد ملی" hint="۱۰ رقم — بدون خط تیره" required :error="fieldErrors.nationalId">
+            <input
+              v-model="form.nationalId"
+              type="text"
+              inputmode="numeric"
+              maxlength="10"
+              class="input-field"
+              dir="ltr"
+              placeholder="0123456789"
+              required
+              :disabled="loading"
+              @input="onNationalIdInput"
+            />
+          </FormField>
+
+          <FormField label="شماره موبایل" hint="کد تأیید به این شماره ارسال می‌شود" required :error="fieldErrors.mobile">
             <input
               v-model="form.mobile"
               type="tel"
@@ -34,15 +54,31 @@
               @input="onMobileInput"
             />
           </FormField>
-          <FormField label="ایمیل" hint="اختیاری — برای دریافت رسید خرید">
-            <input v-model="form.email" type="email" class="input-field" dir="ltr" :disabled="loading" />
+
+          <FormField label="شماره تماس دوم" hint="شماره جایگزین برای تماس کارشناسان" required :error="fieldErrors.secondMobile">
+            <input
+              v-model="form.secondMobile"
+              type="tel"
+              maxlength="11"
+              class="input-field"
+              dir="ltr"
+              placeholder="09xxxxxxxxx"
+              required
+              :disabled="loading"
+              @input="onSecondMobileInput"
+            />
           </FormField>
-          <FormField label="رمز عبور" hint="حداقل ۶ کاراکتر — برای ورود بعدی" required>
-            <input v-model="form.password" type="password" class="input-field" dir="ltr" minlength="6" required :disabled="loading" />
+
+          <FormField label="ایمیل" hint="اختیاری — برای دریافت رسید خرید" :error="fieldErrors.email">
+            <input v-model="form.email" type="email" class="input-field" dir="ltr" :disabled="loading" @input="clearError('email')" />
+          </FormField>
+
+          <FormField label="رمز عبور" hint="حداقل ۶ کاراکتر — برای ورود بعدی" required :error="fieldErrors.password">
+            <input v-model="form.password" type="password" class="input-field" dir="ltr" minlength="6" required :disabled="loading" @input="clearError('password')" />
           </FormField>
 
           <div v-if="otpSent">
-            <FormField label="کد تأیید پیامک" hint="کد ۴ رقمی ارسال‌شده به موبایل" required>
+            <FormField label="کد تأیید پیامک" hint="کد ۴ رقمی ارسال‌شده به موبایل" required :error="fieldErrors.code">
               <input
                 v-model="form.code"
                 type="text"
@@ -53,6 +89,7 @@
                 placeholder="----"
                 required
                 :disabled="loading"
+                @input="clearError('code')"
               />
             </FormField>
             <div class="flex items-center justify-between text-sm mt-2">
@@ -103,11 +140,24 @@
 </template>
 
 <script setup lang="ts">
+import { sanitizeMobile, sanitizeNationalId, validateRegisterForm, firstError } from '~/utils/validation'
+
 definePageMeta({ middleware: 'guest-only' })
 
 const userStore = useUserStore()
 const router = useRouter()
-const form = reactive({ firstName: '', lastName: '', mobile: '', email: '', password: '', code: '' })
+const form = reactive({
+  firstName: '',
+  lastName: '',
+  fatherName: '',
+  nationalId: '',
+  mobile: '',
+  secondMobile: '',
+  email: '',
+  password: '',
+  code: '',
+})
+const fieldErrors = reactive<Record<string, string>>({})
 const acceptTerms = ref(false)
 const loading = ref(false)
 const sendingOtp = ref(false)
@@ -117,13 +167,32 @@ const successMsg = ref('')
 const countdown = ref(0)
 let countdownTimer: ReturnType<typeof setInterval>
 
+const clearError = (key: string) => { fieldErrors[key] = '' }
+
+const applyErrors = (errors: Record<string, string>) => {
+  Object.keys(fieldErrors).forEach(k => { fieldErrors[k] = '' })
+  Object.assign(fieldErrors, errors)
+  error.value = firstError(errors)
+}
+
 const onMobileInput = () => {
-  form.mobile = form.mobile.replace(/\D/g, '').slice(0, 11)
+  form.mobile = sanitizeMobile(form.mobile)
+  clearError('mobile')
   if (otpSent.value) {
     otpSent.value = false
     form.code = ''
     successMsg.value = ''
   }
+}
+
+const onSecondMobileInput = () => {
+  form.secondMobile = sanitizeMobile(form.secondMobile)
+  clearError('secondMobile')
+}
+
+const onNationalIdInput = () => {
+  form.nationalId = sanitizeNationalId(form.nationalId)
+  clearError('nationalId')
 }
 
 const startCountdown = (seconds: number) => {
@@ -136,8 +205,10 @@ const startCountdown = (seconds: number) => {
 }
 
 const sendOtp = async () => {
-  if (!form.mobile.match(/^09\d{9}$/)) {
-    error.value = 'شماره موبایل نامعتبر است'
+  const errors = validateRegisterForm(form)
+  delete errors.code
+  if (Object.keys(errors).length) {
+    applyErrors(errors)
     return
   }
   sendingOtp.value = true
@@ -156,18 +227,22 @@ const sendOtp = async () => {
 }
 
 const submit = async () => {
-  if (!form.code.match(/^\d{4}$/)) {
-    error.value = 'کد تأیید ۴ رقمی را وارد کنید'
+  const errors = validateRegisterForm(form, { requireOtp: true })
+  if (Object.keys(errors).length) {
+    applyErrors(errors)
     return
   }
   loading.value = true
   error.value = ''
   try {
     await userStore.register({
-      firstName: form.firstName,
-      lastName: form.lastName,
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      fatherName: form.fatherName.trim(),
+      nationalId: form.nationalId,
       mobile: form.mobile,
-      email: form.email || undefined,
+      secondMobile: form.secondMobile,
+      email: form.email.trim() || undefined,
       password: form.password,
       code: form.code,
     })

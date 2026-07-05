@@ -13,6 +13,10 @@ class UserRepository extends BaseRepository {
   async findByMobilePublic(mobile) {
     return this.model.findOne({ mobile });
   }
+
+  async findByNationalId(nationalId) {
+    return this.model.findOne({ nationalId });
+  }
 }
 
 module.exports = new UserRepository();

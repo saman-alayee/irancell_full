@@ -38,6 +38,19 @@ const toSmsIrMobile = (mobile) => {
 
 const formatPrice = (price) => new Intl.NumberFormat('fa-IR').format(price);
 
+const normalizeNationalId = (code) => String(code || '').replace(/\D/g, '');
+
+const isValidNationalId = (code) => {
+  const id = normalizeNationalId(code);
+  if (!/^\d{10}$/.test(id)) return false;
+  if (/^(\d)\1{9}$/.test(id)) return false;
+  const check = parseInt(id[9], 10);
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(id[i], 10) * (10 - i);
+  const remainder = sum % 11;
+  return remainder < 2 ? check === remainder : check === 11 - remainder;
+};
+
 module.exports = {
   slugify,
   generateOrderNumber,
@@ -45,4 +58,6 @@ module.exports = {
   normalizeNumber,
   toSmsIrMobile,
   formatPrice,
+  normalizeNationalId,
+  isValidNationalId,
 };

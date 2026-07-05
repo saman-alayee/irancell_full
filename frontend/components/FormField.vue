@@ -6,6 +6,7 @@
     </label>
     <p v-if="hint" class="text-xs text-muted leading-relaxed">{{ hint }}</p>
     <slot />
+    <p v-if="error" class="text-xs text-red-500 mt-1">{{ error }}</p>
   </div>
 </template>
 
@@ -14,5 +15,6 @@ defineProps<{
   label?: string
   hint?: string
   required?: boolean
+  error?: string
 }>()
 </script>

@@ -6,9 +6,28 @@
 
     <div v-else-if="product" class="max-w-4xl mx-auto">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="card aspect-square flex items-center justify-center bg-placeholder overflow-hidden">
-          <img v-if="product.images?.[0]" :src="resolveImageUrl(product.images[0])" :alt="product.title" class="w-full h-full object-cover" />
-          <span v-else class="text-8xl">{{ product.category === 'modem' ? '📡' : '📦' }}</span>
+        <div>
+          <div class="card aspect-square flex items-center justify-center bg-placeholder overflow-hidden mb-3">
+            <img
+              v-if="activeImage"
+              :src="resolveImageUrl(activeImage)"
+              :alt="product.title"
+              class="w-full h-full object-cover"
+            />
+            <span v-else class="text-8xl">{{ product.category === 'modem' ? '📡' : '📦' }}</span>
+          </div>
+          <div v-if="product.images?.length > 1" class="flex gap-2 overflow-x-auto pb-1">
+            <button
+              v-for="(img, i) in product.images"
+              :key="img + i"
+              type="button"
+              class="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 transition"
+              :class="activeIndex === i ? 'border-irancell-yellow' : 'border-transparent opacity-70 hover:opacity-100'"
+              @click="activeIndex = i"
+            >
+              <img :src="resolveImageUrl(img)" :alt="`${product.title} ${i + 1}`" class="w-full h-full object-cover" />
+            </button>
+          </div>
         </div>
 
         <div>
@@ -50,6 +69,7 @@ const route = useRoute()
 const cartStore = useCartStore()
 const { apiFetch, resolveImageUrl } = useApi()
 const qty = ref(1)
+const activeIndex = ref(0)
 
 const { data: product, pending } = await useAsyncData(`product-${route.params.slug}`, async () => {
   try {
@@ -59,6 +79,10 @@ const { data: product, pending } = await useAsyncData(`product-${route.params.sl
     return null
   }
 }, { default: () => null })
+
+const activeImage = computed(() => product.value?.images?.[activeIndex.value] || product.value?.images?.[0] || '')
+
+watch(() => product.value?.images, () => { activeIndex.value = 0 })
 
 const addToCart = () => {
   if (!product.value) return

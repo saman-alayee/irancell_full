@@ -173,6 +173,14 @@ const sendOtp = async () => {
 }
 
 const submitPassword = async () => {
+  if (!form.mobile.match(/^09\d{9}$/)) {
+    error.value = 'شماره موبایل نامعتبر است'
+    return
+  }
+  if (!form.password) {
+    error.value = 'رمز عبور الزامی است'
+    return
+  }
   loading.value = true
   error.value = ''
   try {
@@ -186,8 +194,12 @@ const submitPassword = async () => {
 }
 
 const submitOtp = async () => {
+  if (!form.mobile.match(/^09\d{9}$/)) {
+    error.value = 'شماره موبایل نامعتبر است'
+    return
+  }
   if (!form.code.match(/^\d{4}$/)) {
-    error.value = 'کد ۴ رقمی را وارد کنید'
+    error.value = 'کد تأیید ۴ رقمی نامعتبر است'
     return
   }
   loading.value = true

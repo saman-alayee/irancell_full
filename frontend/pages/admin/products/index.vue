@@ -57,7 +57,7 @@
               <option value="accessory">لوازم جانبی</option>
             </select>
           </FormField>
-          <ImageUpload v-model="form.imageUrl" label="تصویر محصول" />
+          <MultiImageUpload v-model="form.images" label="تصاویر محصول" />
 
           <div class="border-t dark:border-gray-700 pt-4">
             <h3 class="font-bold mb-3">تخفیف نمایشی (الکی)</h3>
@@ -105,7 +105,7 @@ const showForm = ref(false)
 const editing = ref<any>(null)
 const form = reactive({
   title: '', slug: '', description: '', price: 0, stock: 0,
-  category: 'modem', isActive: true, imageUrl: '',
+  category: 'modem', isActive: true, images: [] as string[],
   discountEnabled: false, discountPercent: 20, discountExpiresAt: '', showDiscountTimer: true,
 })
 
@@ -125,7 +125,7 @@ const openForm = (product?: any) => {
   if (product) {
     Object.assign(form, {
       ...product,
-      imageUrl: product.images?.[0] || '',
+      images: [...(product.images || [])],
       discountExpiresAt: product.discountExpiresAt
         ? new Date(product.discountExpiresAt).toISOString().slice(0, 16)
         : '',
@@ -133,7 +133,7 @@ const openForm = (product?: any) => {
   } else {
     Object.assign(form, {
       title: '', slug: '', description: '', price: 0, stock: 0,
-      category: 'modem', isActive: true, imageUrl: '',
+      category: 'modem', isActive: true, images: [],
       discountEnabled: false, discountPercent: 20, discountExpiresAt: '', showDiscountTimer: true,
     })
   }
@@ -150,7 +150,7 @@ const save = async () => {
       stock: form.stock,
       category: form.category,
       isActive: form.isActive,
-      images: form.imageUrl ? [form.imageUrl] : [],
+      images: form.images.filter(Boolean),
       discountEnabled: form.discountEnabled,
       discountPercent: form.discountPercent,
       showDiscountTimer: form.showDiscountTimer,

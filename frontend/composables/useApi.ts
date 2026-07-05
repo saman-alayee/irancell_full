@@ -85,7 +85,10 @@ export const formatPrice = (price: number) =>
   new Intl.NumberFormat('fa-IR').format(price) + ' تومان'
 
 export const formatNumber = (num: string) => {
-  if (num.length === 11) return `${num.slice(0, 4)} ${num.slice(4, 7)} ${num.slice(7)}`
+  const d = num.replace(/\D/g, '')
+  if (d.length === 11 && d.startsWith('09')) {
+    return `${d.slice(0, 4)}  ${d.slice(4, 6)}  ${d.slice(6, 9)}  ${d.slice(9, 11)}`
+  }
   return num
 }
 

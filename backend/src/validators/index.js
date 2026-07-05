@@ -1,43 +1,61 @@
 const { body } = require('express-validator');
+const { isValidNationalId } = require('../utils/helpers');
 
 const loginValidator = [
-  body('email').isEmail().withMessage('Valid email required'),
-  body('password').notEmpty().withMessage('Password required'),
+  body('email').isEmail().withMessage('ایمیل نامعتبر است'),
+  body('password').notEmpty().withMessage('رمز عبور الزامی است'),
 ];
 
 const numberValidator = [
-  body('number').matches(/^09\d{9}$/).withMessage('Invalid number format'),
-  body('price').isFloat({ min: 0 }).withMessage('Valid price required'),
-  body('status').optional().isIn(['available', 'reserved', 'sold']),
+  body('number').matches(/^09\d{9}$/).withMessage('فرمت شماره تلفن نامعتبر است'),
+  body('price').isFloat({ min: 0 }).withMessage('قیمت نامعتبر است'),
+  body('status').optional().isIn(['available', 'reserved', 'sold']).withMessage('وضعیت نامعتبر است'),
 ];
 
 const productValidator = [
-  body('title').notEmpty().withMessage('Title required'),
-  body('price').isFloat({ min: 0 }).withMessage('Valid price required'),
-  body('stock').isInt({ min: 0 }).withMessage('Valid stock required'),
+  body('title').trim().notEmpty().withMessage('عنوان محصول الزامی است'),
+  body('price').isFloat({ min: 0 }).withMessage('قیمت نامعتبر است'),
+  body('stock').isInt({ min: 0 }).withMessage('موجودی نامعتبر است'),
+  body('images').optional().isArray().withMessage('فرمت تصاویر نامعتبر است'),
+  body('images.*').optional().isString().withMessage('آدرس تصویر نامعتبر است'),
 ];
 
 const checkoutValidator = [
-  body('firstName').notEmpty().withMessage('First name required'),
-  body('lastName').notEmpty().withMessage('Last name required'),
-  body('mobile').matches(/^09\d{9}$/).withMessage('Invalid mobile'),
-  body('email').optional({ values: 'falsy' }).isEmail().withMessage('Invalid email'),
-  body('cartItems').isArray({ min: 1 }).withMessage('Cart items required'),
+  body('firstName').trim().notEmpty().withMessage('نام الزامی است'),
+  body('lastName').trim().notEmpty().withMessage('نام خانوادگی الزامی است'),
+  body('mobile').matches(/^09\d{9}$/).withMessage('شماره موبایل نامعتبر است'),
+  body('email').optional({ values: 'falsy' }).isEmail().withMessage('ایمیل نامعتبر است'),
+  body('cartItems').isArray({ min: 1 }).withMessage('سبد خرید خالی است'),
 ];
 
 const discountValidator = [
-  body('code').notEmpty().withMessage('Code required'),
-  body('type').isIn(['percent', 'fixed']).withMessage('Invalid type'),
-  body('value').isFloat({ min: 0 }).withMessage('Valid value required'),
-  body('expiresAt').isISO8601().withMessage('Valid expiry date required'),
+  body('code').trim().notEmpty().withMessage('کد تخفیف الزامی است'),
+  body('type').isIn(['percent', 'fixed']).withMessage('نوع تخفیف نامعتبر است'),
+  body('value').isFloat({ min: 0 }).withMessage('مقدار تخفیف نامعتبر است'),
+  body('expiresAt').isISO8601().withMessage('تاریخ انقضا نامعتبر است'),
 ];
 
 const userRegisterValidator = [
-  body('firstName').notEmpty().withMessage('نام الزامی است'),
-  body('lastName').notEmpty().withMessage('نام خانوادگی الزامی است'),
+  body('firstName').trim().notEmpty().withMessage('نام الزامی است'),
+  body('lastName').trim().notEmpty().withMessage('نام خانوادگی الزامی است'),
+  body('fatherName').trim().notEmpty().withMessage('نام پدر الزامی است'),
+  body('nationalId')
+    .custom((val) => isValidNationalId(val))
+    .withMessage('کد ملی نامعتبر است'),
   body('mobile').matches(/^09\d{9}$/).withMessage('شماره موبایل نامعتبر است'),
+  body('secondMobile')
+    .matches(/^09\d{9}$/)
+    .withMessage('شماره تماس دوم نامعتبر است')
+    .custom((val, { req }) => {
+      const main = String(req.body.mobile || '').replace(/\D/g, '');
+      const second = String(val || '').replace(/\D/g, '');
+      if (main && second && main === second) {
+        throw new Error('شماره تماس دوم نباید با موبایل اصلی یکسان باشد');
+      }
+      return true;
+    }),
   body('email').optional({ values: 'falsy' }).isEmail().withMessage('ایمیل نامعتبر است'),
-  body('password').isLength({ min: 6 }).withMessage('رمز عبور حداقل ۶ کاراکتر'),
+  body('password').isLength({ min: 6 }).withMessage('رمز عبور باید حداقل ۶ کاراکتر باشد'),
   body('code').matches(/^\d{4}$/).withMessage('کد تأیید ۴ رقمی نامعتبر است'),
 ];
 
@@ -58,8 +76,8 @@ const userLoginOtpValidator = [
 
 const adminCreateValidator = [
   body('email').isEmail().withMessage('ایمیل نامعتبر است'),
-  body('password').isLength({ min: 6 }).withMessage('رمز عبور حداقل ۶ کاراکتر'),
-  body('name').notEmpty().withMessage('نام الزامی است'),
+  body('password').isLength({ min: 6 }).withMessage('رمز عبور باید حداقل ۶ کاراکتر باشد'),
+  body('name').trim().notEmpty().withMessage('نام الزامی است'),
 ];
 
 module.exports = {

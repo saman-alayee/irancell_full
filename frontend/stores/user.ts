@@ -3,7 +3,16 @@ import { defineStore } from 'pinia'
 export const useUserStore = defineStore('user', {
   state: () => ({
     token: null as string | null,
-    user: null as { id: string; firstName: string; lastName: string; mobile: string; email?: string } | null,
+    user: null as {
+      id: string
+      firstName: string
+      lastName: string
+      fatherName?: string
+      nationalId?: string
+      mobile: string
+      secondMobile?: string
+      email?: string
+    } | null,
   }),
 
   getters: {
@@ -31,7 +40,10 @@ export const useUserStore = defineStore('user', {
     async register(data: {
       firstName: string
       lastName: string
+      fatherName: string
+      nationalId: string
       mobile: string
+      secondMobile: string
       email?: string
       password: string
       code: string
