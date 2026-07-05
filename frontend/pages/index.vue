@@ -15,11 +15,16 @@
           <span class="inline-block bg-irancell-yellow text-irancell-black text-sm font-bold px-4 py-1 rounded-full mb-6">
             نمایندگی رسمی ایرانسل
           </span>
-          <h1 class="text-4xl lg:text-6xl font-black mb-6 leading-tight">
-            خرید <span class="text-irancell-yellow">شماره VIP</span><br>با بهترین قیمت
+          <h1 class="mb-6 leading-tight">
+            <span class="block text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4">
+              فروشگاه محصولات دیجیتال
+            </span>
+            <span class="block text-5xl sm:text-6xl lg:text-7xl font-black text-irancell-yellow">
+              ایرانسل
+            </span>
           </h1>
           <p class="text-gray-300 text-lg mb-10 max-w-xl mx-auto">
-            هزاران شماره رند ایرانسل، مودم 4G و محصولات جانبی — تحویل فوری و ضمانت اصالت
+            شماره VIP، مودم 4G و محصولات دیجیتال — ارسال به سراسر کشور
           </p>
           <div class="max-w-md mx-auto mb-8">
             <NumberSearch v-model="searchQuery" variant="hero" placeholder="جستجوی شماره: 09001071252" @search="doSearch" />

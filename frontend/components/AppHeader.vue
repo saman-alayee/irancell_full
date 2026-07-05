@@ -3,10 +3,7 @@
     <div class="container mx-auto px-4">
       <div class="flex items-center justify-between h-16">
         <NuxtLink to="/" class="flex items-center gap-2">
-          <div class="w-10 h-10 bg-irancell-yellow rounded-full flex items-center justify-center">
-            <span class="text-irancell-black font-black text-lg">I</span>
-          </div>
-          <span class="font-bold text-lg hidden sm:block">ایرانسل</span>
+          <SiteLogo img-class="h-9 w-auto" />
         </NuxtLink>
 
         <nav class="hidden lg:flex items-center gap-5 text-sm">

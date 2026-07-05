@@ -77,7 +77,7 @@ export const useApi = () => {
 
   return {
     apiFetch, apiUpload, apiUploadImage, getApiBase, getUploadsBase, resolveImageUrl,
-    formatPrice, formatNumber, statusLabel, statusColor,
+    formatPrice, formatNumber, formatContactPhone, statusLabel, statusColor,
   }
 }
 
@@ -91,6 +91,12 @@ export const formatNumber = (num: string) => {
   }
   return num
 }
+
+const toPersianDigits = (value: string) =>
+  value.replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[parseInt(d, 10)])
+
+/** نمایش شماره تماس/تلفن ثابت با ارقام فارسی برای صفحات RTL */
+export const formatContactPhone = (phone: string) => toPersianDigits(phone.trim())
 
 export const statusLabel: Record<string, string> = {
   available: 'موجود', reserved: 'رزرو شده', sold: 'فروخته شده',

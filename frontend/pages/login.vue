@@ -3,9 +3,7 @@
     <div class="max-w-md mx-auto">
       <div class="card p-8">
         <div class="text-center mb-8">
-          <div class="w-14 h-14 bg-irancell-yellow rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="text-xl font-black">I</span>
-          </div>
+          <SiteLogo img-class="h-12 w-auto mx-auto mb-4" />
           <h1 class="text-2xl font-bold">ورود به حساب</h1>
           <p class="text-sm text-muted mt-2">با رمز عبور یا پیامک وارد شوید</p>
         </div>

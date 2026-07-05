@@ -2,47 +2,42 @@
   <div>
     <section class="bg-irancell-black text-white py-16">
       <div class="container mx-auto px-4 text-center">
+        <SiteLogo img-class="h-12 w-auto mx-auto mb-6" />
         <h1 class="text-3xl lg:text-4xl font-black mb-4">درباره ما</h1>
-        <p class="text-gray-400 max-w-xl mx-auto">نمایندگی رسمی ایرانسل — ارائه‌دهنده شماره‌های VIP و محصولات جانبی</p>
       </div>
     </section>
 
     <section class="py-16">
       <div class="container mx-auto px-4 max-w-3xl">
-        <div class="prose prose-lg dark:prose-invert mx-auto space-y-6 text-body leading-relaxed">
+        <div class="space-y-6 text-body leading-relaxed text-lg">
           <p>
-            ما به‌عنوان <strong>نمایندگی رسمی ایرانسل</strong>، با بیش از ۱۰ سال تجربه در حوزه فروش شماره‌های رند و محصولات مخابراتی،
-            خدمات حرفه‌ای و مطمئن به مشتریان ارائه می‌دهیم.
+            در بازار پر رقیب امروزی ، نحوه ارائه یک محصول یا خدمت تا حد زیادی میتواند در موفقیت یک کسب و کار تعیین کننده باشد .
           </p>
           <p>
-            هر ماه بیش از <strong>۲۰۰۰ شماره جدید</strong> دریافت می‌کنیم و با ارسال لینک اختصاصی، امکان خرید آنلاین سریع و آسان را فراهم کرده‌ایم.
+            ما در خدمتتان هستیم تا شماره تلفن برازنده شما را در اختیارتان بگذاریم و محصولات دیجیتال ایرانسل را در هر کجای کشورمان باشید برایتان ارسال نماییم .
           </p>
 
-          <h2 class="text-xl font-bold text-heading mt-10">ارزش‌های ما</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 not-prose">
-            <div v-for="v in values" :key="v.title" class="card p-5">
-              <div class="text-2xl mb-2">{{ v.icon }}</div>
-              <h3 class="font-bold mb-1">{{ v.title }}</h3>
-              <p class="text-sm text-muted">{{ v.desc }}</p>
-            </div>
+          <div class="card p-6 bg-subtle text-center space-y-2">
+            <p class="font-bold text-heading text-xl">مرکز خدمات ارتباطی ایرانسل ۳۱۰۳۸</p>
+            <p class="text-muted">( فول سرویس )</p>
+            <p class="text-sm text-body">با مجوز رسمی از سازمان تنظیم مقررات و ارتباطات رادیویی</p>
           </div>
 
-          <h2 class="text-xl font-bold text-heading mt-10">شعب و تماس</h2>
-          <div class="space-y-4 not-prose">
-            <div v-for="branch in branches" :key="branch.title" class="card p-5">
-              <h3 class="font-bold text-heading mb-3">{{ branch.title }}</h3>
-              <ul class="space-y-2 text-sm text-body">
-                <li v-for="(line, i) in branch.lines" :key="i" class="flex gap-2">
-                  <span class="flex-shrink-0">{{ line.icon }}</span>
-                  <span>{{ line.text }}</span>
-                </li>
+          <h2 class="text-xl font-bold text-heading pt-6">ارتباط با ما</h2>
+          <div class="space-y-4">
+            <div class="card p-5">
+              <h3 class="font-bold text-heading mb-3">شعبه (یک)</h3>
+              <p class="text-sm mb-2">📍 تبریز — میدان جهاد — جنب کوی تبریزنو</p>
+              <p class="text-sm font-bold text-heading">📞 مرکز ارتباط با ایرانسل: ۳۱۰۳۸ (فول سرویس)</p>
+            </div>
+            <div class="card p-5">
+              <h3 class="font-bold text-heading mb-3">شعبه (دو)</h3>
+              <p class="text-sm mb-3">📍 میدان یاغچیان — روبروی بلوار بهشت — پلاک ۳ — دفتر پیشخوان دولت ستاری</p>
+              <ul class="space-y-1 text-sm">
+                <li v-for="phone in branchTwoPhones" :key="phone">📞 {{ phone }}</li>
               </ul>
             </div>
           </div>
-
-          <p class="text-sm text-muted not-prose mt-6">
-            🕐 ساعات کاری: شنبه تا پنج‌شنبه، ۹ تا ۱۸
-          </p>
         </div>
       </div>
     </section>
@@ -50,30 +45,12 @@
 </template>
 
 <script setup lang="ts">
-const values = [
-  { icon: '✅', title: 'اصالت', desc: 'تمامی محصولات و سیم‌کارت‌ها اصل و دارای ضمانت' },
-  { icon: '⚡', title: 'سرعت', desc: 'تحویل و فعال‌سازی در سریع‌ترین زمان ممکن' },
-  { icon: '🤝', title: 'اعتماد', desc: 'شفافیت کامل در قیمت‌گذاری و فرآیند خرید' },
-  { icon: '💬', title: 'پشتیبانی', desc: 'تیم پشتیبانی متخصص در تمام مراحل' },
-]
+import { formatContactPhone } from '~/composables/useApi'
 
-const branches = [
-  {
-    title: 'شعبه (یک)',
-    lines: [
-      { icon: '📍', text: 'تبریز — میدان جهاد — جنب کوی تبریزنو' },
-      { icon: '📞', text: 'مرکز ارتباط با ایرانسل: ۳۱۰۳۸ (فول سرویس)' },
-    ],
-  },
-  {
-    title: 'شعبه (دو)',
-    lines: [
-      { icon: '📍', text: 'میدان یاغچیان — روبروی بلوار بهشت — پلاک ۳ — دفتر پیشخوان دولت ستاری' },
-      { icon: '📞', text: '۰۴۱-۳۴۴ ۰۰۷ ۰۷' },
-      { icon: '📞', text: '۰۴۱-۳۴۴ ۰۰۸ ۰۸' },
-      { icon: '📱', text: '۰۹۰۰ ۹۱۴ ۰۵ ۰۲' },
-      { icon: '📱', text: '۰۹۰۰ ۴۰ ۹۴۶ ۴۰' },
-    ],
-  },
+const branchTwoPhones = [
+  formatContactPhone('041-344 007 07'),
+  formatContactPhone('041-344 008 08'),
+  formatContactPhone('0900 914 05 02'),
+  formatContactPhone('0900 40 946 40'),
 ]
 </script>

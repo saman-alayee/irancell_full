@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+"""Deploy latest code to production without full system setup."""
+import os
+import sys
+import tarfile
+import tempfile
+import paramiko
+
+HOST, PORT, USER, PASSWORD = '85.208.253.193', 3031, 'root', '3Z3w0c8)6Ok0iQe5'
+REMOTE = '/var/www/irancell'
+PROJECT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SKIP_DIRS = {'node_modules', '.git', '.nuxt', '.output', 'dist', '__pycache__'}
+SKIP_FILES = {'.env'}
+
+
+def p(s):
+    try:
+        print(s)
+    except UnicodeEncodeError:
+        print(s.encode('ascii', errors='replace').decode('ascii'))
+
+
+def should_skip(path):
+    parts = path.replace('\\', '/').split('/')
+    if any(x in SKIP_DIRS for x in parts):
+        return True
+    if os.path.basename(path) in SKIP_FILES:
+        return True
+    return False
+
+
+def run(client, cmd, timeout=900):
+    p(f'\n>>> {cmd[:100]}...' if len(cmd) > 100 else f'\n>>> {cmd}')
+    _, stdout, stderr = client.exec_command(cmd, timeout=timeout)
+    out = stdout.read().decode('utf-8', errors='replace')
+    err = stderr.read().decode('utf-8', errors='replace')
+    code = stdout.channel.recv_exit_status()
+    if out.strip():
+        p(out[-6000:] if len(out) > 6000 else out)
+    if err.strip() and code != 0:
+        p('ERR: ' + err[-2000:])
+    return code
+
+
+def main():
+    tar_fd, tar_path = tempfile.mkstemp(suffix='.tar.gz')
+    os.close(tar_fd)
+    try:
+        p('Creating archive...')
+        with tarfile.open(tar_path, 'w:gz') as tar:
+            for root, dirs, files in os.walk(PROJECT):
+                dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+                rel_root = os.path.relpath(root, PROJECT)
+                if rel_root == '.':
+                    rel_root = ''
+                for name in files:
+                    full = os.path.join(root, name)
+                    rel = os.path.join(rel_root, name).replace('\\', '/')
+                    if should_skip(full) or rel.startswith('deploy/deploy_now.py'):
+                        continue
+                    tar.add(full, arcname=rel if rel else name)
+        p(f'Archive: {os.path.getsize(tar_path) / 1024 / 1024:.1f} MB')
+
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(HOST, port=PORT, username=USER, password=PASSWORD, timeout=30)
+
+        sftp = client.open_sftp()
+        sftp.put(tar_path, '/tmp/irancell-deploy.tar.gz')
+        sftp.close()
+
+        steps = [
+            f'tar -xzf /tmp/irancell-deploy.tar.gz -C {REMOTE}',
+            f"sed -i 's/\\r$//' {REMOTE}/deploy/*.sh {REMOTE}/deploy/*.cjs 2>/dev/null || true",
+            f'cd {REMOTE}/backend && npm install --omit=dev --ignore-scripts',
+            f'cd {REMOTE}/frontend && npm install --ignore-scripts',
+            f'cd {REMOTE}/frontend && npm run build',
+            'export LANG=C; pm2 restart all --update-env',
+            'sleep 4',
+            'curl -s -o /dev/null -w "home:%{http_code} " http://127.0.0.1:3000/',
+            'curl -s -o /dev/null -w "api:%{http_code} " http://127.0.0.1:3001/api/health',
+            'curl -s -o /dev/null -w "terms:%{http_code}\\n" http://127.0.0.1:3000/terms',
+            'export LANG=C; pm2 list',
+        ]
+        for cmd in steps:
+            code = run(client, cmd)
+            if code != 0 and 'npm run build' in cmd:
+                client.close()
+                sys.exit(code)
+
+        client.close()
+        p(f'\n=== Deployed: http://{HOST} ===')
+    finally:
+        if os.path.exists(tar_path):
+            os.remove(tar_path)
+
+
+if __name__ == '__main__':
+    main()

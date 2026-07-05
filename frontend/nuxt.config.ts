@@ -27,14 +27,17 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'فروشگاه شماره ایرانسل',
+      title: 'فروشگاه ۳۱۰۳۸ ایرانسل',
+      titleTemplate: '%s',
       htmlAttrs: { lang: 'fa', dir: 'rtl' },
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'خرید شماره رند ایرانسل و محصولات جانبی' },
+        { name: 'description', content: 'فروشگاه محصولات دیجیتال ایرانسل — شماره VIP و محصولات جانبی' },
       ],
       link: [
+        { rel: 'icon', type: 'image/jpeg', href: '/favicon.jfif' },
+        { rel: 'apple-touch-icon', href: '/irancell-logo.jfif' },
         {
           rel: 'stylesheet',
           href: 'https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css',
