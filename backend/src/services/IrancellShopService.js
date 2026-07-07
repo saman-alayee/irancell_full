@@ -402,18 +402,17 @@ class IrancellShopService {
   }
 
   buildAdvancedPattern(prefix, middle, end) {
-    return this.buildPartialPattern(`${prefix || ''}${middle || ''}${end || ''}`);
+    const p = toAsciiDigits(prefix || '').replace(/\D/g, '');
+    const head = p.length >= 4 && p.startsWith('0') ? p.slice(1, 4) : p.slice(0, 3);
+    const mid = toAsciiDigits(middle || '').replace(/\D/g, '');
+    const tail = toAsciiDigits(end || '').replace(/\D/g, '');
+    const midPart = Array.from({ length: 3 }, (_, i) => mid[i] || '_').join('');
+    const endPart = Array.from({ length: 4 }, (_, i) => tail[i] || '_').join('');
+    return `${head}${midPart}${endPart}`;
   }
 
   advancedToFullNumber(prefix, middle, end) {
-    const combined = toAsciiDigits(`${prefix || ''}${middle || ''}${end || ''}`).replace(/\D/g, '');
-    if (/^09\d{9}$/.test(normalizeNumber(combined))) {
-      return normalizeNumber(combined);
-    }
-    if (/^9\d{9}$/.test(combined)) {
-      return normalizeNumber(`0${combined}`);
-    }
-    const pattern = this.buildPartialPattern(combined);
+    const pattern = this.buildAdvancedPattern(prefix, middle, end);
     if (pattern.includes('_')) return null;
     return normalizeNumber(`0${pattern}`);
   }

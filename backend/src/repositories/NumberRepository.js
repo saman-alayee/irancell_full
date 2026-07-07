@@ -41,10 +41,17 @@ class NumberRepository extends BaseRepository {
     return this.model.find({ number: { $in: numberList } }).select('number');
   }
 
-  async findAvailableStartingWith(prefix, limit = 100) {
-    const p = String(prefix || '').replace(/\D/g, '');
-    if (p.length < 8) return [];
-    return this.model.find({ status: 'available', number: new RegExp(`^${p}`) }).limit(limit).lean();
+  patternToNumberRegex(p10) {
+    const pat = String(p10 || '').replace(/\D/g, '');
+    if (pat.length !== 10 || !/^[\d_]+$/.test(pat)) return null;
+    const body = pat.split('').map((c) => (c === '_' ? '\\d' : c)).join('');
+    return new RegExp(`^0${body}$`);
+  }
+
+  async findAvailableByPattern(p10, limit = 50) {
+    const re = this.patternToNumberRegex(p10);
+    if (!re) return [];
+    return this.model.find({ status: 'available', number: re }).limit(limit).lean();
   }
 }
 

@@ -22,6 +22,8 @@ set_kv() {
     echo "${key}=${val}" >> "$ENV"
   fi
 }
+set_kv SMS_IR_PAYMENT_TEMPLATE_ID 352975
+set_kv SMS_IR_PAYMENT_ORDER_PARAM ORDER_NUMBER
 set_kv SMS_IR_TEMPLATE_ID 553188
 set_kv SMS_IR_CODE_PARAM VERIFICATIONCODE
 set_kv IRANCELL_SHOP_API_BASE https://apishop.irancell.ir

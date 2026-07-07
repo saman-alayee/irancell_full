@@ -74,17 +74,14 @@ class SmsService {
     return this._sendTemplate(mobile, templateId, [{ name: codeParam, value: code }]);
   }
 
-  async sendPaymentSuccess(mobile, orderNumber, refId) {
-    const { paymentTemplateId, paymentOrderParam, paymentRefParam } = config.smsIr;
+  async sendPaymentSuccess(mobile, orderNumber) {
+    const { paymentTemplateId, paymentOrderParam } = config.smsIr;
     if (!paymentTemplateId) return null;
 
     return this._sendTemplate(
       mobile,
       paymentTemplateId,
-      [
-        { name: paymentOrderParam, value: orderNumber },
-        { name: paymentRefParam, value: refId || '—' },
-      ],
+      [{ name: paymentOrderParam, value: String(orderNumber || '').trim() || '—' }],
       { throwOnError: false }
     );
   }

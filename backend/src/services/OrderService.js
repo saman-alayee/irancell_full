@@ -17,7 +17,7 @@ class OrderService {
       if (cartItem.type === 'number') {
         const priced = await numberService.lookupForShop(cartItem.number);
         if (!priced.available) {
-          throw new AppError(`شماره ${cartItem.number} در ایرانسل موجود نیست`, 400);
+          throw new AppError(`شماره ${cartItem.number} موجود نیست`, 400);
         }
         const num = await numberRepository.findByNumber(cartItem.number);
         items.push({
@@ -211,7 +211,49 @@ class OrderService {
   }
 
   async getDashboardStats() {
-    const [orderCount, numberStats, productCount, paidOrders, revenueAgg] = await Promise.all([
+    const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(weekStart.getDate() - 6);
+
+    const thirtyDaysAgo = new Date(todayStart);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+
+    const fillDays = (rows, days, field) => {
+      const map = new Map(rows.map((r) => [r._id || r.date, r]));
+      const out = [];
+      for (let i = days - 1; i >= 0; i -= 1) {
+        const d = new Date(todayStart);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        const row = map.get(key);
+        out.push({ date: key, [field]: row ? (row.count ?? row.total ?? 0) : 0 });
+      }
+      return out;
+    };
+
+    const [
+      orderCount,
+      numberStats,
+      productCount,
+      paidOrders,
+      revenueAgg,
+      todayOrders,
+      todayRevenueAgg,
+      weekOrders,
+      weekRevenueAgg,
+      pendingPayments,
+      failedPayments,
+      avgOrderAgg,
+      ordersByDay,
+      revenueByDay,
+      ordersByStatus,
+      paymentByStatus,
+      salesByItemType,
+      recentOrders,
+    ] = await Promise.all([
       orderRepository.count(),
       numberRepository.getStats(),
       productRepository.count(),
@@ -220,14 +262,22 @@ class OrderService {
         { $match: { paymentStatus: 'paid' } },
         { $group: { _id: null, total: { $sum: '$totalAmount' } } },
       ]),
-    ]);
-
-    const totalRevenue = revenueAgg[0]?.total || 0;
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const [ordersByDay, revenueByDay, ordersByStatus] = await Promise.all([
+      orderRepository.count({ createdAt: { $gte: todayStart } }),
+      orderRepository.model.aggregate([
+        { $match: { createdAt: { $gte: todayStart }, paymentStatus: 'paid' } },
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+      ]),
+      orderRepository.count({ createdAt: { $gte: weekStart } }),
+      orderRepository.model.aggregate([
+        { $match: { createdAt: { $gte: weekStart }, paymentStatus: 'paid' } },
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+      ]),
+      orderRepository.count({ paymentStatus: 'pending' }),
+      orderRepository.count({ paymentStatus: 'failed' }),
+      orderRepository.model.aggregate([
+        { $match: { paymentStatus: 'paid' } },
+        { $group: { _id: null, avg: { $avg: '$totalAmount' } } },
+      ]),
       orderRepository.model.aggregate([
         { $match: { createdAt: { $gte: thirtyDaysAgo } } },
         {
@@ -251,19 +301,72 @@ class OrderService {
       orderRepository.model.aggregate([
         { $group: { _id: '$status', count: { $sum: 1 } } },
       ]),
+      orderRepository.model.aggregate([
+        { $group: { _id: '$paymentStatus', count: { $sum: 1 } } },
+      ]),
+      orderRepository.model.aggregate([
+        { $match: { paymentStatus: 'paid' } },
+        { $unwind: '$items' },
+        {
+          $group: {
+            _id: '$items.type',
+            count: { $sum: '$items.quantity' },
+            revenue: { $sum: '$items.totalPrice' },
+          },
+        },
+      ]),
+      orderRepository.model
+        .find()
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .select('orderNumber user status paymentStatus totalAmount createdAt items')
+        .lean(),
     ]);
+
+    const totalRevenue = revenueAgg[0]?.total || 0;
+    const todayRevenue = todayRevenueAgg[0]?.total || 0;
+    const weekRevenue = weekRevenueAgg[0]?.total || 0;
+    const avgOrderValue = Math.round(avgOrderAgg[0]?.avg || 0);
+
+    const ordersDaySeries = fillDays(ordersByDay, 30, 'count');
+    const revenueDaySeries = fillDays(revenueByDay, 30, 'total');
 
     return {
       orderCount,
       paidOrderCount: paidOrders,
       totalRevenue,
+      todayOrders,
+      todayRevenue,
+      weekOrders,
+      weekRevenue,
+      avgOrderValue,
+      pendingPayments,
+      failedPayments,
       numberStats,
       productCount,
       charts: {
-        ordersByDay: ordersByDay.map((d) => ({ date: d._id, count: d.count })),
-        revenueByDay: revenueByDay.map((d) => ({ date: d._id, total: d.total })),
+        ordersByDay: ordersDaySeries,
+        revenueByDay: revenueDaySeries,
         ordersByStatus: ordersByStatus.map((d) => ({ status: d._id, count: d.count })),
+        paymentByStatus: paymentByStatus.map((d) => ({ status: d._id, count: d.count })),
+        salesByItemType: salesByItemType.map((d) => ({
+          type: d._id,
+          count: d.count,
+          revenue: d.revenue,
+        })),
       },
+      recentOrders: recentOrders.map((o) => ({
+        id: o._id,
+        orderNumber: o.orderNumber,
+        customer: `${o.user?.firstName || ''} ${o.user?.lastName || ''}`.trim(),
+        mobile: o.user?.mobile,
+        status: o.status,
+        paymentStatus: o.paymentStatus,
+        totalAmount: o.totalAmount,
+        itemCount: o.items?.length || 0,
+        itemTypes: [...new Set((o.items || []).map((i) => i.type))],
+        createdAt: o.createdAt,
+      })),
     };
   }
 }

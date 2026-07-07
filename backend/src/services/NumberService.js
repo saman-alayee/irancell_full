@@ -6,14 +6,39 @@ const AppError = require('../utils/AppError');
 const { normalizeNumber } = require('../utils/helpers');
 
 class NumberService {
+  localToExact(record) {
+    return {
+      number: record.number,
+      price: record.price,
+      basePrice: record.basePrice || record.price,
+      available: true,
+      source: 'local',
+    };
+  }
+
   async lookupForShop(number) {
     const settings = await numberPricingService.getSettings();
+    const normalized = normalizeNumber(number);
+
+    if (settings.irancellFetchEnabled) {
+      const lookup = await irancellShopService.lookupNumber(normalized);
+      const priced = numberPricingService.buildPricing(lookup, settings);
+      if (priced.available) return priced;
+    }
+
+    const local = await numberRepository.findByNumber(normalized);
+    if (local && local.status === 'available') {
+      return this.localToExact(local);
+    }
+
     if (!settings.irancellFetchEnabled) {
       throw new AppError('استعلام ایرانسل غیرفعال است', 503);
     }
-    const normalized = normalizeNumber(number);
-    const lookup = await irancellShopService.lookupNumber(normalized);
-    return numberPricingService.buildPricing(lookup, settings);
+
+    return numberPricingService.buildPricing(
+      { found: true, number: normalized, available: false, basePrice: 0 },
+      settings
+    );
   }
 
   async getByNumber(number) {
@@ -46,6 +71,21 @@ class NumberService {
     return numberRepository.search(query, options);
   }
 
+  async getLocalByPattern(pattern, limit = 20) {
+    const records = await numberRepository.findAvailableByPattern(pattern, limit);
+    return records.map((r) => this.localToExact(r));
+  }
+
+  mergeSearchResults(apiItems, localItems, limit) {
+    const map = new Map();
+    for (const item of [...localItems, ...apiItems]) {
+      if (item?.number && item.available !== false && !map.has(item.number)) {
+        map.set(item.number, item);
+      }
+    }
+    return [...map.values()].slice(0, limit);
+  }
+
   async simSearch(params = {}, limit = 20) {
     const {
       q = '',
@@ -53,7 +93,6 @@ class NumberService {
       prefix = '0930',
       middle = '',
       end = '',
-      rest = '',
       offset = 0,
     } = params;
 
@@ -111,6 +150,13 @@ class NumberService {
         response.exact = priced;
         return response;
       }
+
+      const localExact = await numberRepository.findByNumber(fullNumber);
+      if (localExact && localExact.status === 'available') {
+        response.exact = this.localToExact(localExact);
+        return response;
+      }
+
       response.unavailable = true;
     }
 
@@ -138,6 +184,11 @@ class NumberService {
         response.similarNumbers = similar.length > 0;
       }
 
+      if (offset === 0 && pattern && pattern.length === 10) {
+        const localItems = await this.getLocalByPattern(pattern, limit);
+        similar = this.mergeSearchResults(similar, localItems, limit);
+      }
+
       response.similar = similar;
       response.hasMore = searchResult.hasMore;
 
@@ -149,6 +200,13 @@ class NumberService {
         response.unavailable = true;
       }
     } catch (err) {
+      if (offset === 0 && pattern && pattern.length === 10) {
+        const localItems = await this.getLocalByPattern(pattern, limit);
+        if (localItems.length) {
+          response.similar = localItems;
+          response.similarNumbers = true;
+        }
+      }
       if (!response.exact && !response.similar.length) {
         response.unavailable = true;
         response.error = err.message;

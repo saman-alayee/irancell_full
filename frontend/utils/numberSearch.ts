@@ -16,9 +16,11 @@ export function formatMsisdnDisplay(number: string) {
 }
 
 export function restDigitsFromSegments(prefix: string, middle: string, end: string) {
-  const m = toAsciiDigits(middle).replace(/\D/g, '').slice(0, 3)
-  const e = toAsciiDigits(end).replace(/\D/g, '').slice(0, 4)
-  return (m + e).split('').concat(Array(7).fill('')).slice(0, 7)
+  const m = toAsciiDigits(middle).replace(/\D/g, '')
+  const e = toAsciiDigits(end).replace(/\D/g, '')
+  const midArr = Array.from({ length: 3 }, (_, i) => m[i] || '')
+  const endArr = Array.from({ length: 4 }, (_, i) => e[i] || '')
+  return [...midArr, ...endArr]
 }
 
 export function buildPartialPattern(rawDigits: string) {
@@ -29,18 +31,21 @@ export function buildPartialPattern(rawDigits: string) {
   return p + '_'.repeat(10 - p.length)
 }
 
-/** جستجوی پیشرفته: 0930 + 998 + 8235 → 9309988235 یا 930998____ */
+/** جستجوی پیشرفته: 0900 + خالی + 6952 → 900___6952 */
 export function buildAdvancedPattern(prefix: string, middle: string, end: string) {
-  return buildPartialPattern(`${prefix || ''}${middle || ''}${end || ''}`)
+  const p = toAsciiDigits(prefix || '').replace(/\D/g, '')
+  const head = p.length >= 4 && p.startsWith('0') ? p.slice(1, 4) : p.slice(0, 3)
+  const m = toAsciiDigits(middle || '').replace(/\D/g, '')
+  const tail = toAsciiDigits(end || '').replace(/\D/g, '')
+  const midPart = Array.from({ length: 3 }, (_, i) => m[i] || '_').join('')
+  const endPart = Array.from({ length: 4 }, (_, i) => tail[i] || '_').join('')
+  return `${head}${midPart}${endPart}`
 }
 
 export function advancedToFullNumber(prefix: string, middle: string, end: string) {
-  const combined = toAsciiDigits(`${prefix || ''}${middle || ''}${end || ''}`).replace(/\D/g, '')
-  if (/^09\d{9}$/.test(combined)) return combined
-  if (/^9\d{9}$/.test(combined)) return `0${combined}`
-  const p10 = buildPartialPattern(combined)
-  if (p10.includes('_')) return null
-  return `0${p10}`
+  const pattern = buildAdvancedPattern(prefix, middle, end)
+  if (pattern.includes('_')) return null
+  return `0${pattern}`
 }
 
 /** @deprecated use buildAdvancedPattern */

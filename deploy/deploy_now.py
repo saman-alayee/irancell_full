@@ -83,6 +83,12 @@ def main():
             f"echo 'SMS_IR_TEMPLATE_ID=553188' >> {REMOTE}/backend/.env",
             f"grep -q '^SMS_IR_CODE_PARAM=' {REMOTE}/backend/.env 2>/dev/null || "
             f"echo 'SMS_IR_CODE_PARAM=VERIFICATIONCODE' >> {REMOTE}/backend/.env",
+            f"grep -q '^SMS_IR_PAYMENT_TEMPLATE_ID=' {REMOTE}/backend/.env 2>/dev/null && "
+            f"sed -i 's/^SMS_IR_PAYMENT_TEMPLATE_ID=.*/SMS_IR_PAYMENT_TEMPLATE_ID=352975/' {REMOTE}/backend/.env || "
+            f"echo 'SMS_IR_PAYMENT_TEMPLATE_ID=352975' >> {REMOTE}/backend/.env",
+            f"grep -q '^SMS_IR_PAYMENT_ORDER_PARAM=' {REMOTE}/backend/.env 2>/dev/null && "
+            f"sed -i 's/^SMS_IR_PAYMENT_ORDER_PARAM=.*/SMS_IR_PAYMENT_ORDER_PARAM=ORDER_NUMBER/' {REMOTE}/backend/.env || "
+            f"echo 'SMS_IR_PAYMENT_ORDER_PARAM=ORDER_NUMBER' >> {REMOTE}/backend/.env",
             f'cd {REMOTE}/backend && npm install --omit=dev --ignore-scripts',
             f'cd {REMOTE}/frontend && npm install --ignore-scripts',
             f'cd {REMOTE}/frontend && npm run build',
