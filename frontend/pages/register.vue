@@ -150,8 +150,10 @@ import { sanitizeMobile, sanitizeNationalId, validateRegisterForm, firstError } 
 
 definePageMeta({ middleware: 'guest-only' })
 
-const userStore = useUserStore()
+const route = useRoute()
 const router = useRouter()
+
+const userStore = useUserStore()
 const form = reactive({
   firstName: '',
   lastName: '',
@@ -254,7 +256,10 @@ const submit = async () => {
       password: form.password,
       code: form.code,
     })
-    router.push('/')
+    const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
+      ? route.query.redirect
+      : '/'
+    router.push(redirect)
   } catch (e: any) {
     error.value = e.message
   } finally {

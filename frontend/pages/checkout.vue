@@ -1,21 +1,15 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-8">ثبت اطلاعات</h1>
+    <h1 class="text-2xl font-bold mb-8">ثبت اطلاعات و پرداخت</h1>
 
     <div class="max-w-lg mx-auto">
       <form class="card p-6 space-y-4" @submit.prevent="submit">
-        <FormField label="نام خانوادگی" hint="نام خانوادگی واقعی خریدار سیم‌کارت مورد نظر — مطابق شناسنامه" required>
-          <input v-model="form.lastName" class="input-field" required autofocus />
-        </FormField>
-        <FormField label="نام" hint="نام واقعی خریدار — برای صدور فاکتور" required>
-          <input v-model="form.firstName" class="input-field" required />
-        </FormField>
-        <FormField label="شماره موبایل" hint="شماره ۱۱ رقمی — برای پیگیری سفارش و اطلاع‌رسانی" required>
-          <input v-model="form.mobile" type="tel" maxlength="11" class="input-field text-left" dir="ltr" required placeholder="09xxxxxxxxx" />
-        </FormField>
-        <FormField label="ایمیل" hint="اختیاری — رسید خرید به این ایمیل ارسال می‌شود">
-          <input v-model="form.email" type="email" class="input-field" dir="ltr" />
-        </FormField>
+        <div class="bg-subtle rounded-xl p-4 space-y-2 text-sm">
+          <p class="font-bold mb-2">اطلاعات خریدار</p>
+          <p><span class="text-muted">نام:</span> {{ userStore.user?.firstName }} {{ userStore.user?.lastName }}</p>
+          <p dir="ltr"><span class="text-muted">موبایل:</span> {{ userStore.user?.mobile }}</p>
+          <p v-if="userStore.user?.email" dir="ltr"><span class="text-muted">ایمیل:</span> {{ userStore.user?.email }}</p>
+        </div>
 
         <label class="flex items-start gap-2 text-sm">
           <input v-model="acceptTerms" type="checkbox" class="mt-1" required />
@@ -41,13 +35,14 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: 'auth-user' })
+
 const cartStore = useCartStore()
 const userStore = useUserStore()
 const router = useRouter()
 const { apiFetch, formatPrice } = useApi()
 const toast = useToastStore()
 
-const form = reactive({ firstName: '', lastName: '', mobile: '', email: '' })
 const acceptTerms = ref(false)
 const loading = ref(false)
 
@@ -55,21 +50,19 @@ onMounted(() => {
   cartStore.loadFromStorage()
   userStore.loadFromStorage()
   if (cartStore.isEmpty) router.push('/cart')
-  if (userStore.user) {
-    form.firstName = userStore.user.firstName
-    form.lastName = userStore.user.lastName
-    form.mobile = userStore.user.mobile
-    form.email = userStore.user.email || ''
-  }
 })
 
 const submit = async () => {
+  if (!userStore.user) return
   loading.value = true
   try {
     const res = await apiFetch('/orders', {
       method: 'POST',
       body: JSON.stringify({
-        ...form,
+        firstName: userStore.user.firstName,
+        lastName: userStore.user.lastName,
+        mobile: userStore.user.mobile,
+        email: userStore.user.email || undefined,
         cartItems: cartStore.toApiItems(),
         discountCode: cartStore.discountCode || undefined,
       }),

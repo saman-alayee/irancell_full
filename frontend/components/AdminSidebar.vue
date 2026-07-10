@@ -36,6 +36,7 @@ const menuItems = [
   { to: '/admin/settings/pricing', icon: '💰', label: 'قیمت ایرانسل' },
   { to: '/admin/products', icon: '📦', label: 'مدیریت محصولات' },
   { to: '/admin/orders', icon: '🛒', label: 'مدیریت سفارش‌ها' },
+  { to: '/admin/users', icon: '👥', label: 'کاربران' },
   { to: '/admin/discounts', icon: '🏷️', label: 'مدیریت تخفیف' },
   { to: '/admin/admins', icon: '👤', label: 'مدیریت مدیران' },
 ]

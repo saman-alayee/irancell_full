@@ -66,11 +66,15 @@
 
 <script setup lang="ts">
 const route = useRoute()
+const router = useRouter()
 const cartStore = useCartStore()
+const userStore = useUserStore()
 const toast = useToastStore()
 const { apiFetch, resolveImageUrl } = useApi()
 const qty = ref(1)
 const activeIndex = ref(0)
+
+userStore.loadFromStorage()
 
 const { data: product, pending } = await useAsyncData(`product-${route.params.slug}`, async () => {
   try {
@@ -87,6 +91,11 @@ watch(() => product.value?.images, () => { activeIndex.value = 0 })
 
 const addToCart = () => {
   if (!product.value) return
+  if (!userStore.isLoggedIn) {
+    toast.warning('برای افزودن محصول ابتدا ثبت‌نام کنید')
+    router.push(`/register?redirect=${encodeURIComponent(route.fullPath)}`)
+    return
+  }
   cartStore.addProduct(product.value, qty.value)
   toast.success('محصول به سبد خرید اضافه شد')
 }

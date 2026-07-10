@@ -154,6 +154,8 @@
 <script setup lang="ts">
 import { digitCount, payloadToQuery, type SimSearchPayload } from '~/utils/numberSearch'
 
+useHead({ title: '39633777 | فروشگاه ایرانسل' })
+
 const router = useRouter()
 const { apiFetch, formatNumber, resolveImageUrl } = useApi()
 const toast = useToastStore()

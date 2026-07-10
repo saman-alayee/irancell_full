@@ -27,6 +27,7 @@ const discountController = require('../controllers/discountController');
 const excelController = require('../controllers/excelController');
 const shopSettingsController = require('../controllers/shopSettingsController');
 const adminManageController = require('../controllers/adminManageController');
+const userManageController = require('../controllers/userManageController');
 const uploadController = require('../controllers/uploadController');
 const rateLimit = require('../middleware/rateLimit');
 
@@ -95,6 +96,9 @@ router.delete('/admin/products/:id', authAdmin, productController.remove);
 router.get('/admin/orders', authAdmin, orderController.adminList);
 router.get('/admin/orders/:id', authAdmin, orderController.getById);
 router.patch('/admin/orders/:id/status', authAdmin, orderController.updateStatus);
+
+// Admin users
+router.get('/admin/users', authAdmin, userManageController.list);
 
 // Admin discounts
 router.get('/admin/discounts', authAdmin, discountController.list);
