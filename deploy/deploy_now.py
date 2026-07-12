@@ -89,6 +89,15 @@ def main():
             f"grep -q '^SMS_IR_PAYMENT_ORDER_PARAM=' {REMOTE}/backend/.env 2>/dev/null && "
             f"sed -i 's/^SMS_IR_PAYMENT_ORDER_PARAM=.*/SMS_IR_PAYMENT_ORDER_PARAM=ORDER_NUMBER/' {REMOTE}/backend/.env || "
             f"echo 'SMS_IR_PAYMENT_ORDER_PARAM=ORDER_NUMBER' >> {REMOTE}/backend/.env",
+            f"grep -q '^ZARINPAL_MERCHANT_ID=' {REMOTE}/backend/.env 2>/dev/null && "
+            f"sed -i 's/^ZARINPAL_MERCHANT_ID=.*/ZARINPAL_MERCHANT_ID=4d025349-150c-4fca-81ad-6fe936e107e9/' {REMOTE}/backend/.env || "
+            f"echo 'ZARINPAL_MERCHANT_ID=4d025349-150c-4fca-81ad-6fe936e107e9' >> {REMOTE}/backend/.env",
+            f"grep -q '^ZARINPAL_SANDBOX=' {REMOTE}/backend/.env 2>/dev/null && "
+            f"sed -i 's/^ZARINPAL_SANDBOX=.*/ZARINPAL_SANDBOX=false/' {REMOTE}/backend/.env || "
+            f"echo 'ZARINPAL_SANDBOX=false' >> {REMOTE}/backend/.env",
+            f"grep -q '^ZARINPAL_CALLBACK_URL=' {REMOTE}/backend/.env 2>/dev/null && "
+            f"sed -i 's|^ZARINPAL_CALLBACK_URL=.*|ZARINPAL_CALLBACK_URL=http://irancell-31038.ir/api/payment/verify|' {REMOTE}/backend/.env || "
+            f"echo 'ZARINPAL_CALLBACK_URL=http://irancell-31038.ir/api/payment/verify' >> {REMOTE}/backend/.env",
             f'cd {REMOTE}/backend && npm install --omit=dev --ignore-scripts',
             f'cd {REMOTE}/frontend && npm install --ignore-scripts',
             f'cd {REMOTE}/frontend && npm run build',

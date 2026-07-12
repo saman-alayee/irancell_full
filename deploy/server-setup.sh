@@ -84,8 +84,8 @@ MONGODB_URI=mongodb://127.0.0.1:27017/irancell_shop
 JWT_SECRET=irancell-prod-$(openssl rand -hex 32)
 JWT_EXPIRES_IN=7d
 
-ZARINPAL_MERCHANT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-ZARINPAL_SANDBOX=true
+ZARINPAL_MERCHANT_ID=4d025349-150c-4fca-81ad-6fe936e107e9
+ZARINPAL_SANDBOX=false
 ZARINPAL_CALLBACK_URL=http://${SERVER_IP}/api/payment/verify
 
 FRONTEND_URL=http://${SERVER_IP}
@@ -103,6 +103,8 @@ else
   echo "Updating backend .env URLs for production..."
   sed -i "s|^FRONTEND_URL=.*|FRONTEND_URL=http://${SERVER_IP}|" "$APP_DIR/backend/.env"
   sed -i "s|^ZARINPAL_CALLBACK_URL=.*|ZARINPAL_CALLBACK_URL=http://${SERVER_IP}/api/payment/verify|" "$APP_DIR/backend/.env"
+  sed -i "s|^ZARINPAL_MERCHANT_ID=.*|ZARINPAL_MERCHANT_ID=4d025349-150c-4fca-81ad-6fe936e107e9|" "$APP_DIR/backend/.env"
+  sed -i "s|^ZARINPAL_SANDBOX=.*|ZARINPAL_SANDBOX=false|" "$APP_DIR/backend/.env"
   sed -i "s|^API_PUBLIC_URL=.*|API_PUBLIC_URL=http://${SERVER_IP}|" "$APP_DIR/backend/.env"
   grep -q '^FRONTEND_URL=' "$APP_DIR/backend/.env" || echo "FRONTEND_URL=http://${SERVER_IP}" >> "$APP_DIR/backend/.env"
   grep -q '^API_PUBLIC_URL=' "$APP_DIR/backend/.env" || echo "API_PUBLIC_URL=http://${SERVER_IP}" >> "$APP_DIR/backend/.env"
