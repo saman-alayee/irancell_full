@@ -35,7 +35,8 @@ set_kv IRANCELL_LOOKUP_CONCURRENCY 4
 set_kv ZARINPAL_MERCHANT_ID 4d025349-150c-4fca-81ad-6fe936e107e9
 set_kv ZARINPAL_SANDBOX false
 set_kv ZARINPAL_CALLBACK_URL https://irancell-31038.ir/api/payment/verify
-grep -E '^(SMS_IR_TEMPLATE|SMS_IR_CODE|IRANCELL_|ZARINPAL_)' "$ENV"
+set_kv ZIBAL_CALLBACK_URL https://irancell-31038.ir/api/payment/verify/zibal
+grep -E '^(SMS_IR_TEMPLATE|SMS_IR_CODE|IRANCELL_|ZARINPAL_|ZIBAL_)' "$ENV"
 test -f /var/www/irancell/backend/src/services/IrancellShopService.js && echo IRANCELL_SERVICE=ok || echo IRANCELL_SERVICE=missing
 '''
 

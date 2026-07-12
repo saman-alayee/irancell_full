@@ -98,6 +98,11 @@ def main():
             f"grep -q '^ZARINPAL_CALLBACK_URL=' {REMOTE}/backend/.env 2>/dev/null && "
             f"sed -i 's|^ZARINPAL_CALLBACK_URL=.*|ZARINPAL_CALLBACK_URL=https://irancell-31038.ir/api/payment/verify|' {REMOTE}/backend/.env || "
             f"echo 'ZARINPAL_CALLBACK_URL=https://irancell-31038.ir/api/payment/verify' >> {REMOTE}/backend/.env",
+            f"grep -q '^ZIBAL_MERCHANT_ID=' {REMOTE}/backend/.env 2>/dev/null || "
+            f"echo 'ZIBAL_MERCHANT_ID=' >> {REMOTE}/backend/.env",
+            f"grep -q '^ZIBAL_CALLBACK_URL=' {REMOTE}/backend/.env 2>/dev/null && "
+            f"sed -i 's|^ZIBAL_CALLBACK_URL=.*|ZIBAL_CALLBACK_URL=https://irancell-31038.ir/api/payment/verify/zibal|' {REMOTE}/backend/.env || "
+            f"echo 'ZIBAL_CALLBACK_URL=https://irancell-31038.ir/api/payment/verify/zibal' >> {REMOTE}/backend/.env",
             f'cd {REMOTE}/backend && npm install --omit=dev --ignore-scripts',
             f'cd {REMOTE}/frontend && npm install --ignore-scripts',
             f'cd {REMOTE}/frontend && npm run build',

@@ -5,6 +5,8 @@ const productRepository = require('../repositories/ProductRepository');
 const numberService = require('./NumberService');
 const discountService = require('./DiscountService');
 const zarinPalService = require('./ZarinPalService');
+const zibalService = require('./ZibalService');
+const config = require('../config');
 const smsService = require('./SmsService');
 const AppError = require('../utils/AppError');
 const { generateOrderNumber, normalizeMobile } = require('../utils/helpers');
@@ -93,27 +95,55 @@ class OrderService {
     return order;
   }
 
-  async initiatePayment(orderId) {
+  getAvailableGateways() {
+    const gateways = [];
+    if (config.zarinpal.merchantId) {
+      gateways.push({ id: 'zarinpal', name: 'زرین‌پال' });
+    }
+    if (config.zibal.merchantId) {
+      gateways.push({ id: 'zibal', name: 'زیبال' });
+    }
+    return gateways;
+  }
+
+  async initiatePayment(orderId, gateway = 'zarinpal') {
     const order = await orderRepository.findById(orderId);
     if (!order) throw new AppError('Order not found', 404);
     if (order.paymentStatus === 'paid') throw new AppError('Order already paid', 400);
 
-    const paymentResult = await zarinPalService.requestPayment({
+    const available = this.getAvailableGateways().map((g) => g.id);
+    if (!available.includes(gateway)) {
+      throw new AppError('درگاه پرداخت انتخاب‌شده در دسترس نیست', 400);
+    }
+
+    const paymentInput = {
       amount: order.totalAmount * 10,
       description: `Order ${order.orderNumber}`,
       mobile: order.user.mobile,
       email: order.user.email,
       orderId: order._id,
-    });
+    };
+
+    let paymentResult;
+    if (gateway === 'zibal') {
+      paymentResult = await zibalService.requestPayment(paymentInput);
+    } else {
+      paymentResult = await zarinPalService.requestPayment(paymentInput);
+    }
 
     await paymentRepository.create({
       order: order._id,
       amount: order.totalAmount,
       authority: paymentResult.authority,
       status: 'pending',
+      gateway,
     });
 
-    return { paymentUrl: paymentResult.paymentUrl, authority: paymentResult.authority };
+    return {
+      paymentUrl: paymentResult.paymentUrl,
+      authority: paymentResult.authority,
+      gateway,
+    };
   }
 
   async verifyPayment(authority) {
@@ -125,7 +155,10 @@ class OrderService {
       return { order, refId: payment.refId };
     }
 
-    const verifyResult = await zarinPalService.verifyPayment(authority, order.totalAmount * 10);
+    const gateway = payment.gateway || 'zarinpal';
+    const verifyResult = gateway === 'zibal'
+      ? await zibalService.verifyPayment(authority)
+      : await zarinPalService.verifyPayment(authority, order.totalAmount * 10);
 
     await paymentRepository.updateById(payment._id, {
       status: 'success',

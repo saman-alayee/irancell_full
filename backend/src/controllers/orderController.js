@@ -14,8 +14,13 @@ exports.create = asyncHandler(async (req, res) => {
 });
 
 exports.pay = asyncHandler(async (req, res) => {
-  const result = await orderService.initiatePayment(req.params.id);
+  const gateway = req.body?.gateway || 'zarinpal';
+  const result = await orderService.initiatePayment(req.params.id, gateway);
   success(res, result);
+});
+
+exports.getGateways = asyncHandler(async (req, res) => {
+  success(res, orderService.getAvailableGateways());
 });
 
 exports.verify = asyncHandler(async (req, res) => {
@@ -24,6 +29,17 @@ exports.verify = asyncHandler(async (req, res) => {
     return res.redirect(`${process.env.FRONTEND_URL}/payment/failed`);
   }
   const result = await orderService.verifyPayment(Authority);
+  res.redirect(
+    `${process.env.FRONTEND_URL}/payment/success?order=${result.order.orderNumber}&ref=${result.refId}`
+  );
+});
+
+exports.verifyZibal = asyncHandler(async (req, res) => {
+  const { success, trackId } = req.query;
+  if (String(success) !== '1' || !trackId) {
+    return res.redirect(`${process.env.FRONTEND_URL}/payment/failed`);
+  }
+  const result = await orderService.verifyPayment(String(trackId));
   res.redirect(
     `${process.env.FRONTEND_URL}/payment/success?order=${result.order.orderNumber}&ref=${result.refId}`
   );

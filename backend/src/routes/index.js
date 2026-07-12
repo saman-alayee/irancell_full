@@ -16,6 +16,7 @@ const {
   otpSendValidator,
   userLoginOtpValidator,
   adminCreateValidator,
+  payValidator,
 } = require('../validators');
 
 const authController = require('../controllers/authController');
@@ -45,11 +46,13 @@ router.get('/products', productController.list);
 router.get('/products/:slug', productController.getBySlug);
 router.get('/discounts/active', orderController.getActiveDiscount);
 router.post('/discounts/validate', orderController.validateDiscount);
+router.get('/payment/gateways', orderController.getGateways);
 router.post('/orders', checkoutValidator, validate, orderController.create);
-router.post('/orders/:id/pay', orderController.pay);
+router.post('/orders/:id/pay', payValidator, validate, orderController.pay);
 router.get('/orders/track', orderController.track);
 router.get('/orders/mine', authUser, orderController.listMine);
 router.get('/payment/verify', orderController.verify);
+router.get('/payment/verify/zibal', orderController.verifyZibal);
 
 // User auth
 router.post('/auth/otp/send', otpLimiter, otpSendValidator, validate, userController.sendOtp);

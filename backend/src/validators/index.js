@@ -75,6 +75,10 @@ const userLoginOtpValidator = [
   body('code').matches(/^\d{4}$/).withMessage('کد تأیید ۴ رقمی نامعتبر است'),
 ];
 
+const payValidator = [
+  body('gateway').optional().isIn(['zarinpal', 'zibal']).withMessage('درگاه پرداخت نامعتبر است'),
+];
+
 const adminCreateValidator = [
   body('email').isEmail().withMessage('ایمیل نامعتبر است'),
   body('password').isLength({ min: 6 }).withMessage('رمز عبور باید حداقل ۶ کاراکتر باشد'),
@@ -92,4 +96,5 @@ module.exports = {
   userLoginValidator,
   userLoginOtpValidator,
   adminCreateValidator,
+  payValidator,
 };

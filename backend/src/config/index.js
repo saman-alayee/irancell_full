@@ -11,6 +11,10 @@ module.exports = {
     sandbox: process.env.ZARINPAL_SANDBOX === 'true',
     callbackUrl: process.env.ZARINPAL_CALLBACK_URL || 'http://127.0.0.1:3001/api/payment/verify',
   },
+  zibal: {
+    merchantId: process.env.ZIBAL_MERCHANT_ID || '',
+    callbackUrl: process.env.ZIBAL_CALLBACK_URL || 'http://127.0.0.1:3001/api/payment/verify/zibal',
+  },
   smsIr: {
     apiKey: (process.env.SMS_IR_API_KEY || '').trim(),
     templateId: (process.env.SMS_IR_TEMPLATE_ID || '').trim(),
