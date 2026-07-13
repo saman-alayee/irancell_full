@@ -32,6 +32,7 @@ const uploadController = require('../controllers/uploadController');
 const rateLimit = require('../middleware/rateLimit');
 
 const router = express.Router();
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: 'تعداد تلاش ورود بیش از حد — ۱۵ دقیقه صبر کنید' });
 const orderLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'تعداد سفارش بیش از حد — ۱۵ دقیقه صبر کنید' });
 const trackLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: 'تعداد درخواست پیگیری بیش از حد — ۱۵ دقیقه صبر کنید' });
 const otpLimiter = rateLimit({ windowMs: 60 * 1000, max: 5, message: 'لطفاً یک دقیقه صبر کنید' });
@@ -47,7 +48,7 @@ router.get('/products/:slug', productController.getBySlug);
 router.get('/discounts/active', orderController.getActiveDiscount);
 router.post('/discounts/validate', orderController.validateDiscount);
 router.get('/payment/gateways', orderController.getGateways);
-router.post('/orders', authUser, checkoutValidator, validate, orderController.create);
+router.post('/orders', orderLimiter, authUser, checkoutValidator, validate, orderController.create);
 router.post('/orders/:id/pay', authUser, payValidator, validate, orderController.pay);
 router.get('/orders/track', trackLimiter, orderController.track);
 router.get('/orders/mine', authUser, orderController.listMine);
