@@ -7,6 +7,7 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
+irancell-credentials-and-info.pdf
 deploy/check_*.py
 deploy/diag*.py
 deploy/diagnose*.py
