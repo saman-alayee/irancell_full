@@ -27,7 +27,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: '39633777 | فروشگاه ایرانسل',
+      title: 'فروشگاه ایرانسل',
       titleTemplate: '%s',
       htmlAttrs: { lang: 'fa', dir: 'rtl' },
       meta: [

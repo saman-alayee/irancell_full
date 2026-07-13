@@ -80,7 +80,9 @@ onMounted(async () => {
   try {
     const res = await apiFetch('/payment/gateways')
     gateways.value = res.data || []
-    selectedGateway.value = gateways.value[0]?.id || ''
+    selectedGateway.value = gateways.value.find((g) => g.id === 'zarinpal')?.id
+      || gateways.value[0]?.id
+      || ''
   } catch {
     toast.error('خطا در دریافت درگاه‌های پرداخت')
   }

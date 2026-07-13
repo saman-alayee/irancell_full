@@ -97,11 +97,11 @@ class OrderService {
 
   getAvailableGateways() {
     const gateways = [];
-    if (config.zibal.merchantId) {
-      gateways.push({ id: 'zibal', name: 'زیبال' });
-    }
     if (config.zarinpal.merchantId) {
       gateways.push({ id: 'zarinpal', name: 'زرین‌پال' });
+    }
+    if (config.zibal.merchantId) {
+      gateways.push({ id: 'zibal', name: 'زیبال' });
     }
     return gateways;
   }
