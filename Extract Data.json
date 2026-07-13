@@ -1,0 +1,254 @@
+{
+  "name": "Karlancer Notifications to Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        300
+      ],
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://www.karlancer.com/api/notifications/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        240,
+        300
+      ],
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "name": "Get Notifications",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "8MkWcd4PTcEQ7BGP",
+          "name": "KL token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nif (!staticData.processedIds) {\n  staticData.processedIds = [];\n}\n\nconst response = $input.first().json;\nconst notifications = response?.data?.notifications?.data || [];\n\nconst projectNotifications = notifications.filter((n) => {\n  const url = n.url || n.link || '';\n  return url.includes('klnc.ir') || url.includes('/projects/');\n});\n\nconst newNotifications = projectNotifications.filter((n) => {\n  const id = String(n.id || n.url || n.link);\n  return !staticData.processedIds.includes(id);\n});\n\nif (newNotifications.length === 0) {\n  return [];\n}\n\nreturn newNotifications.map((notification) => {\n  const url = notification.url || notification.link || '';\n  const shortCode = url.split('/').pop().split('?')[0];\n\n  return {\n    json: {\n      notificationId: String(notification.id || url),\n      shortCode,\n      notificationTitle: notification.title || notification.subject || '',\n      notificationBody: notification.body || notification.message || '',\n      notificationTime: notification.created_at || notification.createdAt || ''\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "name": "Filter New Project Notifications"
+    },
+    {
+      "parameters": {
+        "url": "=https://klnc.ir/l/{{ $json.shortCode }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        720,
+        300
+      ],
+      "id": "d4e5f6a7-b8c9-0123-def0-234567890123",
+      "name": "Fetch Project Page",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "8MkWcd4PTcEQ7BGP",
+          "name": "KL token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nconst extractProject = (html, meta = {}) => {\n  const titleMatch = html.match(/<h1[^>]*class=\"[^\"]*fs-18[^\"]*font-weight-bold[^\"]*\"[^>]*>([^<]*)<\\/h1>/);\n  const title = titleMatch ? titleMatch[1].trim() : meta.notificationTitle || 'نامشخص';\n\n  const budgetMatch = html.match(/از\\s*([\\d,]+)\\s*تومان[\\s\\S]*?تا\\s*([\\d,]+)\\s*تومان/);\n  let minBudget = null;\n  let maxBudget = null;\n  if (budgetMatch) {\n    minBudget = parseInt(budgetMatch[1].replace(/,/g, ''), 10);\n    maxBudget = parseInt(budgetMatch[2].replace(/,/g, ''), 10);\n  }\n\n  const locationMatch = html.match(/<i[^>]*class=\"[^\"]*icon-location[^\"]*\"[^>]*><\\/i>\\s*([^<]*)/);\n  const location = locationMatch ? locationMatch[1].trim() : '';\n\n  const timeMatch = html.match(/<span[^>]*class=\"[^\"]*bg-39-color[^\"]*\"[^>]*>([^<]*)<\\/span>/);\n  const postedTime = timeMatch ? timeMatch[1].trim() : '';\n\n  const durationMatch = html.match(/زمان پیشنهادی\\s*<div[^>]*class=\"[^\"]*fs-16[^\"]*b-900[^\"]*\"[^>]*>([^<]*)<\\/div>/);\n  const jobDuration = durationMatch ? durationMatch[1].replace(/[^0-9]/g, '') : '';\n\n  const descMatch = html.match(/<div[^>]*class=\"[^\"]*white-space-pre-line[^\"]*\"[^>]*>([^<]*)<\\/div>/);\n  const description = descMatch ? descMatch[1].trim().replace(/\\s+/g, ' ') : meta.notificationBody || '';\n\n  const skillMatches = html.match(/<span[^>]*class=\"[^\"]*ellipsis[^\"]*\"[^>]*>([^<]*)<\\/span>/g);\n  let skills = [];\n  if (skillMatches) {\n    skills = skillMatches\n      .map((s) => {\n        const match = s.match(/>([^<]*)</);\n        return match ? match[1].trim() : '';\n      })\n      .filter((s) => s && !s.includes('کارلنسر') && s.length > 1);\n  }\n\n  const statusMatch = html.match(/وضعیت\\s*<div[^>]*class=\"[^\"]*fs-16[^\"]*b-900[^\"]*\"[^>]*>([^<]*)<\\/div>/);\n  const status = statusMatch ? statusMatch[1].trim() : '';\n\n  const urlMatch = html.match(/\\/projects\\/([^\"'?#]+)/);\n  const projectSlug = urlMatch ? urlMatch[1] : '';\n  const projectLink = projectSlug\n    ? `https://www.karlancer.com/projects/${projectSlug}`\n    : `https://klnc.ir/l/${meta.shortCode}`;\n\n  return {\n    notification_id: meta.notificationId,\n    short_code: meta.shortCode,\n    title,\n    min_budget: minBudget,\n    max_budget: maxBudget,\n    budget_range:\n      minBudget && maxBudget\n        ? `${minBudget.toLocaleString()} تا ${maxBudget.toLocaleString()} تومان`\n        : '',\n    location,\n    posted_time: postedTime,\n    job_duration_days: jobDuration,\n    description,\n    skills,\n    status,\n    project_url: projectLink,\n    notification_time: meta.notificationTime,\n    extracted_at: new Date().toISOString()\n  };\n};\n\nfor (const item of items) {\n  const meta = {\n    notificationId: item.json.notificationId,\n    shortCode: item.json.shortCode,\n    notificationTitle: item.json.notificationTitle,\n    notificationBody: item.json.notificationBody,\n    notificationTime: item.json.notificationTime\n  };\n\n  const htmlData = item.json.data || item.json;\n  let htmlContent = '';\n\n  if (typeof htmlData === 'string') {\n    htmlContent = htmlData;\n  } else if (Array.isArray(htmlData)) {\n    htmlContent = htmlData.map((h) => h.data || h).join('');\n  } else {\n    htmlContent = htmlData.data || JSON.stringify(htmlData);\n  }\n\n  results.push({ json: extractProject(htmlContent, meta) });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ],
+      "id": "e5f6a7b8-c9d0-1234-ef01-345678901234",
+      "name": "Extract Project Details"
+    },
+    {
+      "parameters": {
+        "jsCode": "const projects = $input.all().map((item) => item.json);\n\nif (!projects.length) {\n  return [];\n}\n\nreturn projects.map((p) => {\n  let message = '🆕 *پروژه جدید از نوتیفیکیشن کارلنسر*\\n\\n';\n  message += `📌 *عنوان:* ${p.title || 'نامشخص'}\\n`;\n\n  if (p.min_budget || p.max_budget) {\n    const min = p.min_budget ? p.min_budget.toLocaleString() : 'نامشخص';\n    const max = p.max_budget ? p.max_budget.toLocaleString() : 'نامشخص';\n    message += `💰 *بودجه:* ${min} تا ${max} تومان\\n`;\n  } else if (p.budget_range) {\n    message += `💰 *بودجه:* ${p.budget_range}\\n`;\n  }\n\n  if (p.location) message += `📍 *مکان:* ${p.location}\\n`;\n  if (p.posted_time) message += `⏰ *زمان انتشار:* ${p.posted_time}\\n`;\n  if (p.job_duration_days) message += `📅 *مدت زمان:* ${p.job_duration_days} روز\\n`;\n  if (p.status) message += `📊 *وضعیت:* ${p.status}\\n`;\n\n  if (p.skills && p.skills.length) {\n    const skillList = p.skills.slice(0, 5).join(' • ');\n    message += `🛠 *مهارت‌ها:* ${skillList}`;\n    if (p.skills.length > 5) message += ` و ${p.skills.length - 5} مورد دیگر`;\n    message += '\\n';\n  }\n\n  if (p.description) {\n    const desc = p.description.length > 300 ? `${p.description.substring(0, 300)}...` : p.description;\n    message += `📝 *توضیحات:* ${desc}\\n`;\n  }\n\n  message += `🔗 *لینک پروژه:* ${p.project_url}\\n`;\n  message += `🕐 *زمان استخراج:* ${new Date(p.extracted_at).toLocaleString('fa-IR')}\\n`;\n  message += '\\n🤖 _ارسال شده توسط ربات کارلنسر_';\n\n  return {\n    json: {\n      message,\n      notification_id: p.notification_id\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "id": "f6a7b8c9-d0e1-2345-f012-456789012345",
+      "name": "Format Telegram Message"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://77.68.28.206/v2/telegramBot/n8n",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chatId",
+              "value": "47314155"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "token",
+              "value": "8697771873:AAFw_69YmdlgjIzA-uUFlGRcyea1md7ep3s"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1440,
+        300
+      ],
+      "id": "a7b8c9d0-e1f2-3456-0123-567890123456",
+      "name": "Send to Telegram",
+      "retryOnFail": true,
+      "waitBetweenTries": 2500,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nif (!staticData.processedIds) {\n  staticData.processedIds = [];\n}\n\nconst sentItems = $('Format Telegram Message').all();\n\nfor (const item of sentItems) {\n  const id = String(item.json.notification_id);\n  if (id && !staticData.processedIds.includes(id)) {\n    staticData.processedIds.push(id);\n  }\n}\n\nif (staticData.processedIds.length > 500) {\n  staticData.processedIds = staticData.processedIds.slice(-500);\n}\n\nreturn sentItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        300
+      ],
+      "id": "b8c9d0e1-f2a3-4567-1234-678901234567",
+      "name": "Mark Notifications as Processed"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Notifications": {
+      "main": [
+        [
+          {
+            "node": "Filter New Project Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter New Project Notifications": {
+      "main": [
+        [
+          {
+            "node": "Fetch Project Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Project Page": {
+      "main": [
+        [
+          {
+            "node": "Extract Project Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Project Details": {
+      "main": [
+        [
+          {
+            "node": "Format Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Telegram": {
+      "main": [
+        [
+          {
+            "node": "Mark Notifications as Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "805b9fa6-a0fb-472d-851b-2f0b390e7cc4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7dd6a30a447999fd73e32623ab1b3d7495de6377d6c3a1ed4179158bae1f1ee8"
+  },
+  "tags": []
+}
