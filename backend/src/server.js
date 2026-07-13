@@ -12,8 +12,8 @@ const start = async () => {
   } else {
     console.log('Irancell shop lookup: live API (DEV_MODE off)');
   }
-  const server = app.listen(config.port, () => {
-    console.log(`Server running on port ${config.port}`);
+  const server = app.listen(config.port, config.host, () => {
+    console.log(`Server running on ${config.host}:${config.port}`);
   });
   // Excel + Irancell lookup for large files can take several minutes
   server.timeout = 15 * 60 * 1000;

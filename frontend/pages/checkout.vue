@@ -95,10 +95,6 @@ const submit = async () => {
     const res = await apiFetch('/orders', {
       method: 'POST',
       body: JSON.stringify({
-        firstName: userStore.user.firstName,
-        lastName: userStore.user.lastName,
-        mobile: userStore.user.mobile,
-        email: userStore.user.email || undefined,
         cartItems: cartStore.toApiItems(),
         discountCode: cartStore.discountCode || undefined,
       }),

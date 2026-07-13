@@ -21,11 +21,12 @@ const productValidator = [
 ];
 
 const checkoutValidator = [
-  body('firstName').trim().notEmpty().withMessage('نام الزامی است'),
-  body('lastName').trim().notEmpty().withMessage('نام خانوادگی الزامی است'),
-  body('mobile').matches(/^09\d{9}$/).withMessage('شماره موبایل نامعتبر است'),
-  body('email').optional({ values: 'falsy' }).isEmail().withMessage('ایمیل نامعتبر است'),
   body('cartItems').isArray({ min: 1 }).withMessage('سبد خرید خالی است'),
+  body('cartItems.*.type').isIn(['number', 'product']).withMessage('نوع آیتم نامعتبر است'),
+  body('cartItems.*.quantity').optional().isInt({ min: 1, max: 99 }).withMessage('تعداد نامعتبر است'),
+  body('cartItems.*.number').optional().matches(/^09\d{9}$/).withMessage('شماره نامعتبر است'),
+  body('cartItems.*.productId').optional().isString().withMessage('شناسه محصول نامعتبر است'),
+  body('discountCode').optional({ values: 'falsy' }).trim(),
 ];
 
 const discountValidator = [

@@ -23,7 +23,7 @@ export const useApi = () => {
   const getAuthToken = (url: string): string | null => {
     if (!import.meta.client) return null
     if (url.startsWith('/admin')) return localStorage.getItem('admin_token')
-    if (url.startsWith('/auth/me') || url.startsWith('/orders/mine')) {
+    if (url.startsWith('/auth/me') || url.startsWith('/orders')) {
       return localStorage.getItem('user_token')
     }
     return null

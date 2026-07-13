@@ -1,8 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { authAdmin } = require('../middleware/auth');
-const { authUser } = require('../middleware/auth');
+const { authAdmin, authUser } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { productImageUpload } = require('../middleware/upload');
 const {
@@ -33,7 +32,8 @@ const uploadController = require('../controllers/uploadController');
 const rateLimit = require('../middleware/rateLimit');
 
 const router = express.Router();
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, message: 'تعداد تلاش ورود بیش از حد — ۱۵ دقیقه صبر کنید' });
+const orderLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'تعداد سفارش بیش از حد — ۱۵ دقیقه صبر کنید' });
+const trackLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: 'تعداد درخواست پیگیری بیش از حد — ۱۵ دقیقه صبر کنید' });
 const otpLimiter = rateLimit({ windowMs: 60 * 1000, max: 5, message: 'لطفاً یک دقیقه صبر کنید' });
 const excelUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -47,9 +47,9 @@ router.get('/products/:slug', productController.getBySlug);
 router.get('/discounts/active', orderController.getActiveDiscount);
 router.post('/discounts/validate', orderController.validateDiscount);
 router.get('/payment/gateways', orderController.getGateways);
-router.post('/orders', checkoutValidator, validate, orderController.create);
-router.post('/orders/:id/pay', payValidator, validate, orderController.pay);
-router.get('/orders/track', orderController.track);
+router.post('/orders', authUser, checkoutValidator, validate, orderController.create);
+router.post('/orders/:id/pay', authUser, payValidator, validate, orderController.pay);
+router.get('/orders/track', trackLimiter, orderController.track);
 router.get('/orders/mine', authUser, orderController.listMine);
 router.get('/payment/verify', orderController.verify);
 router.get('/payment/verify/zibal', orderController.verifyZibal);

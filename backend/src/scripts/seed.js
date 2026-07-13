@@ -20,9 +20,7 @@ const seed = async () => {
     });
     console.log('Admin created:', adminEmail);
   } else {
-    existingAdmin.password = adminPassword;
-    await existingAdmin.save();
-    console.log('Admin password synced:', adminEmail);
+    console.log('Admin already exists, password unchanged:', adminEmail);
   }
 
   const productCount = await Product.countDocuments();

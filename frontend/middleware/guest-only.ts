@@ -6,7 +6,7 @@ export default defineNuxtRouteMiddleware((to) => {
 
   if (userStore.isLoggedIn) {
     const redirect = typeof to.query.redirect === 'string' ? to.query.redirect : ''
-    if (redirect.startsWith('/')) return navigateTo(redirect)
+    if (redirect.startsWith('/') && !redirect.startsWith('//')) return navigateTo(redirect)
     return navigateTo('/')
   }
 })

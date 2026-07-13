@@ -1,8 +1,21 @@
 require('dotenv').config();
 
+const requireProductionSecret = (name, value, minLength = 1) => {
+  if (process.env.NODE_ENV === 'production') {
+    if (!value || String(value).length < minLength) {
+      throw new Error(`${name} must be set in production (min ${minLength} chars)`);
+    }
+  }
+  return value;
+};
+
+const jwtSecret = process.env.JWT_SECRET || 'dev-secret';
+requireProductionSecret('JWT_SECRET', jwtSecret, 32);
+
 module.exports = {
   port: process.env.PORT || 3001,
-  jwtSecret: process.env.JWT_SECRET || 'dev-secret',
+  host: process.env.HOST || (process.env.NODE_ENV === 'production' ? '127.0.0.1' : '0.0.0.0'),
+  jwtSecret,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
   apiPublicUrl: process.env.API_PUBLIC_URL || `http://127.0.0.1:${process.env.PORT || 3001}`,

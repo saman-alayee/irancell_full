@@ -54,7 +54,10 @@ class OrderService {
 
   async createOrder({ user, cartItems, discountCode }) {
     const items = await this.buildItems(cartItems);
+    if (!items.length) throw new AppError('سبد خرید نامعتبر است', 400);
+
     const subtotal = items.reduce((sum, i) => sum + i.totalPrice, 0);
+    if (subtotal <= 0) throw new AppError('مبلغ سفارش نامعتبر است', 400);
 
     let discountAmount = 0;
     let discount = null;
@@ -106,10 +109,14 @@ class OrderService {
     return gateways;
   }
 
-  async initiatePayment(orderId, gateway = 'zarinpal') {
+  async initiatePayment(orderId, gateway = 'zarinpal', user = null) {
     const order = await orderRepository.findById(orderId);
     if (!order) throw new AppError('Order not found', 404);
     if (order.paymentStatus === 'paid') throw new AppError('Order already paid', 400);
+
+    if (user && normalizeMobile(order.user.mobile) !== normalizeMobile(user.mobile)) {
+      throw new AppError('دسترسی به این سفارش مجاز نیست', 403);
+    }
 
     const available = this.getAvailableGateways().map((g) => g.id);
     if (!available.includes(gateway)) {

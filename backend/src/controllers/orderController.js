@@ -4,9 +4,14 @@ const orderService = require('../services/OrderService');
 const discountService = require('../services/DiscountService');
 
 exports.create = asyncHandler(async (req, res) => {
-  const { firstName, lastName, mobile, email, cartItems, discountCode } = req.body;
+  const { cartItems, discountCode } = req.body;
   const order = await orderService.createOrder({
-    user: { firstName, lastName, mobile, email },
+    user: {
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
+      mobile: req.user.mobile,
+      email: req.user.email,
+    },
     cartItems,
     discountCode,
   });
@@ -15,7 +20,7 @@ exports.create = asyncHandler(async (req, res) => {
 
 exports.pay = asyncHandler(async (req, res) => {
   const gateway = req.body?.gateway || 'zarinpal';
-  const result = await orderService.initiatePayment(req.params.id, gateway);
+  const result = await orderService.initiatePayment(req.params.id, gateway, req.user);
   success(res, result);
 });
 
